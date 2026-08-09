@@ -1,7 +1,7 @@
 function [LogFile,ResFlag]= processKMTEventField(EventNum, opts)
 % Process all KMTNet fields for a given EventNum, saving each in its own directory.
 % Usage:
-%   processKMTEvent(192630, 'Site', 'CTIO', 'FieldToAvoid', 'BLG02');
+%   ml.scripts.processKMTEventField(192630, 'Site', 'CTIO', 'FieldToAvoid', 'BLG02');
 
 arguments
     EventNum;
@@ -24,7 +24,7 @@ arguments
     opts.NiterNoWeightsBeforeSys (1,1) double = 2
     opts.NiterWeightsAfterSys (1,1) double = 4
     opts.NIterSysRem (1,1) double = 2
-    opts.NWorkers (1,1) double = 32
+    opts.NWorkers (1,1) double = 24
     opts.ReCalcBack (1,1) logical = false
     opts.FitWings (1,1) logical = true
     opts.RunPhotometry (1,1) logical = true
@@ -118,7 +118,14 @@ for iField = 1:numel(UniqueFields)
     %ds9(Im); XY = [106,106]+RefCat.getCol({'X','Y'});  ds9.plot(XY(RefCat.getCol('I')<16.5,:))
     
     ds9(Im); XY = [106,106]+RefCat.getCol({'X','Y'});  ds9.plot(XY(RefCat.getCol('I')<16.5,:));
-    cd('/home/noamse/KMT/data/runPipeBot/')
+%     cd('/home/noamse/KMT/data/runPipeBot/')
+
+    BotDir = strcat(opts.TargetBasePath,'/runPipeBot/');
+    if ~isfolder(BotDir)
+        mkdir(BotDir)
+    end
+
+    cd(BotDir);
     ImageFile= ['AlignImage',num2str(EventNum),'Field', thisField];
     epsFile = [ImageFile, '.eps'];
     pngFile = [ImageFile, '.png'];
@@ -136,13 +143,15 @@ for iField = 1:numel(UniqueFields)
     else
         error('❌ Conversion failed:\n%s', result);
     end
-    ut.sendTelegram(['Trying to match Event',num2str(EventNum),', Field', thisField])
+    ut.sendTelegram(['Trying to match Event',num2str(EventNum),', Field', thisField])    
     responseText =ut.sendTelegramImageAndWaitForReply([ImageFile,'.png']);
+  
     if strcmp(responseText,'Bad')
         [RefCat, Im, ~, ~, LogStr] = ml.generateKMTRefCat(DirThisField, Set, FieldPath, ...
             'Threshold', 50, 'SNPrctileRange', opts.SNPrctileRangeRefCat,'CandidateIndices',2:5:100);
         ds9(Im); XY = [106,106]+RefCat.getCol({'X','Y'});  ds9.plot(XY(RefCat.getCol('I')<16.5,:));
-        cd('/home/noamse/KMT/data/runPipeBot/')
+%         cd('/home/noamse/KMT/data/runPipeBot/')
+        cd(BotDir);
         ImageFile= ['AlignImage',num2str(EventNum),'Field', thisField];
         epsFile = [ImageFile, '.eps'];
         pngFile = [ImageFile, '.png'];
