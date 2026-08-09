@@ -1,4 +1,4 @@
-# Lizoo: KMTNet Event Batch Reduction Pipeline
+# Lizoo: KMTNet Event Batch Reduction Pipeline 
 
 **Lizoo** is a MATLAB workflow for batch processing of event fields from the Korean Microlensing Telescope Network (KMTNet). It performs image-level photometry, astrometric calibration, and iterative detrending to produce science-grade catalogs and light curves suitable for downstream analysis.
 
