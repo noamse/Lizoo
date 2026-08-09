@@ -30,6 +30,7 @@ arguments
     opts.RunPhotometry (1,1) logical = true
     opts.RunDetrend (1,1) logical = false
     opts.PathToImagesDirs = '/bigdata3/projects/KMTdata/Images/';
+    opts.RunPipeBotPath = '~/KMTdata/runPipeBot/';
 end
 
 % Define root path
@@ -118,7 +119,7 @@ for iField = 1:numel(UniqueFields)
     %ds9(Im); XY = [106,106]+RefCat.getCol({'X','Y'});  ds9.plot(XY(RefCat.getCol('I')<16.5,:))
     
     ds9(Im); XY = [106,106]+RefCat.getCol({'X','Y'});  ds9.plot(XY(RefCat.getCol('I')<16.5,:));
-    cd('/home/noamse/KMT/data/runPipeBot/')
+    cd(opts.RunPipeBotPath)
     ImageFile= ['AlignImage',num2str(EventNum),'Field', thisField];
     epsFile = [ImageFile, '.eps'];
     pngFile = [ImageFile, '.png'];
@@ -142,7 +143,7 @@ for iField = 1:numel(UniqueFields)
         [RefCat, Im, ~, ~, LogStr] = ml.generateKMTRefCat(DirThisField, Set, FieldPath, ...
             'Threshold', 50, 'SNPrctileRange', opts.SNPrctileRangeRefCat,'CandidateIndices',2:5:100);
         ds9(Im); XY = [106,106]+RefCat.getCol({'X','Y'});  ds9.plot(XY(RefCat.getCol('I')<16.5,:));
-        cd('/home/noamse/KMT/data/runPipeBot/')
+        cd(opts.RunPipeBotPath)
         ImageFile= ['AlignImage',num2str(EventNum),'Field', thisField];
         epsFile = [ImageFile, '.eps'];
         pngFile = [ImageFile, '.png'];
