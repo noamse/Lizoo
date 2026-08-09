@@ -24,12 +24,13 @@ arguments
     opts.NiterNoWeightsBeforeSys (1,1) double = 2
     opts.NiterWeightsAfterSys (1,1) double = 4
     opts.NIterSysRem (1,1) double = 2
-    opts.NWorkers (1,1) double = 24
+    opts.NWorkers (1,1) double = 16
     opts.ReCalcBack (1,1) logical = false
     opts.FitWings (1,1) logical = true
     opts.RunPhotometry (1,1) logical = true
     opts.RunDetrend (1,1) logical = false
     opts.PathToImagesDirs = '/bigdata3/projects/KMTdata/Images/';
+    opts.RunPipeBotPath = '~/KMTdata/runPipeBot/';
 end
 
 % Define root path
@@ -118,7 +119,6 @@ for iField = 1:numel(UniqueFields)
     %ds9(Im); XY = [106,106]+RefCat.getCol({'X','Y'});  ds9.plot(XY(RefCat.getCol('I')<16.5,:))
     
     ds9(Im); XY = [106,106]+RefCat.getCol({'X','Y'});  ds9.plot(XY(RefCat.getCol('I')<16.5,:));
-%     cd('/home/noamse/KMT/data/runPipeBot/')
 
     BotDir = strcat(opts.TargetBasePath,'/runPipeBot/');
     if ~isfolder(BotDir)
@@ -126,6 +126,7 @@ for iField = 1:numel(UniqueFields)
     end
 
     cd(BotDir);
+
     ImageFile= ['AlignImage',num2str(EventNum),'Field', thisField];
     epsFile = [ImageFile, '.eps'];
     pngFile = [ImageFile, '.png'];
@@ -150,8 +151,9 @@ for iField = 1:numel(UniqueFields)
         [RefCat, Im, ~, ~, LogStr] = ml.generateKMTRefCat(DirThisField, Set, FieldPath, ...
             'Threshold', 50, 'SNPrctileRange', opts.SNPrctileRangeRefCat,'CandidateIndices',2:5:100);
         ds9(Im); XY = [106,106]+RefCat.getCol({'X','Y'});  ds9.plot(XY(RefCat.getCol('I')<16.5,:));
-%         cd('/home/noamse/KMT/data/runPipeBot/')
+
         cd(BotDir);
+        
         ImageFile= ['AlignImage',num2str(EventNum),'Field', thisField];
         epsFile = [ImageFile, '.eps'];
         pngFile = [ImageFile, '.png'];
