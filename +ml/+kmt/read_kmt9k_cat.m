@@ -1,7 +1,7 @@
 function RefTab = read_kmt9k_cat(imagePath,Args)
 arguments  
     imagePath;
-    Args.CatalogDir = '/home/noamse/astro/KMT_ML/data/Catalogs9K/';
+    Args.CatalogDir = '/bigdata3/projects/KMTdata/data/Catalogs9K/';
     Args.XCol = 1;
     Args.YCol = 2;
     Args.MagCol = 3; 
