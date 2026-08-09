@@ -6,7 +6,7 @@ function [LogFile,ResFlag]= processKMTEventField(EventNum, opts)
 arguments
     EventNum;
     opts.Site = 'CTIO'
-    opts.TargetBasePath = '/home/noamse/KMT/data/Results/'
+    opts.TargetBasePath = '~/KMTdata/Results/'
     opts.FieldToAvoid = ''
     opts.CCDSEC (1,4) double = [106,406,106,406]
     opts.SNPrctileRangeRefCat = [50,95];
@@ -29,7 +29,7 @@ arguments
     opts.FitWings (1,1) logical = true
     opts.RunPhotometry (1,1) logical = true
     opts.RunDetrend (1,1) logical = false
-    opts.PathToImagesDirs = '/data1/noamse/KMT/data/images/events_highpriority/';
+    opts.PathToImagesDirs = '/bigdata3/projects/KMTdata/Images/';
 end
 
 % Define root path
