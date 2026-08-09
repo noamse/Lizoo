@@ -24,7 +24,7 @@ arguments
     opts.NiterNoWeightsBeforeSys (1,1) double = 2
     opts.NiterWeightsAfterSys (1,1) double = 4
     opts.NIterSysRem (1,1) double = 2
-    opts.NWorkers (1,1) double = 32
+    opts.NWorkers (1,1) double = 16
     opts.ReCalcBack (1,1) logical = false
     opts.FitWings (1,1) logical = true
     opts.RunPhotometry (1,1) logical = true
