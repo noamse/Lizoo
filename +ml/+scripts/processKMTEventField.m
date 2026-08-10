@@ -8,7 +8,7 @@ arguments
     opts.Site = 'CTIO'
     opts.TargetBasePath = '~/KMTdata/Results/'
     opts.FieldToAvoid = ''
-    opts.CCDSEC (1,4) double = [106,406,106,406]
+    opts.CCDSEC (1,4) double = [1,300,1,300]; % [106,406,106,406] for evt. 192630
     opts.SNPrctileRangeRefCat = [50,95];
     opts.SNRforPSF (1,1) double = 100
     opts.NRefMagBin (1,1) double = 12
@@ -204,7 +204,8 @@ for iField = 1:numel(UniqueFields)
         Set = readtable(MasterPath);
         Set = table2struct(Set);
 
-        parfor Iep = 1:numel(DirThisField)
+%         parfor Iep = 1:numel(DirThisField)
+        for Iep = 1:numel(DirThisField)
             success = ImRed.runPipe(DirThisField{Iep}, FieldPath, 'SettingStruct', Set);
             logmsg(LogFileField, sprintf('%s image %d/%d', ...
                 ternary(success, '✓', '✗'), Iep, numel(DirThisField)));
