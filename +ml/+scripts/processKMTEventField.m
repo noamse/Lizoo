@@ -31,6 +31,8 @@ arguments
     opts.RunDetrend (1,1) logical = false
     opts.PathToImagesDirs = '/bigdata3/projects/KMTdata/Images/';
     opts.RunPipeBotPath = '~/KMTdata/runPipeBot/';
+    opts.JDkey='JD';           % 'MIDJD'   for evt. 192630
+    opts.HistoryKey='COMMENT'; % 'HISTORY' for evt. 192630
 end
 
 % Define root path
@@ -55,7 +57,7 @@ switch upper(opts.Site)
         Imagebasedir = [opts.PathToImagesDirs, EventNumStr, '/', '*_I*/'];
 end
 
-[DirCell, ~] = ml.util.generateDirCell('BaseDir', Imagebasedir, 'Site', opts.Site);
+[DirCell, ~] = ml.util.generateDirCell('BaseDir', Imagebasedir, 'Site', opts.Site, 'JDkey',opts.JDkey);
 FieldIDs = cellfun(@(fp) regexp(fp, 'BLG\d+', 'match', 'once'), DirCell, 'UniformOutput', false);
 UniqueFields = unique(FieldIDs(~cellfun(@isempty, FieldIDs)));
 ResFlag = true(numel(UniqueFields),1);
@@ -107,7 +109,7 @@ for iField = 1:numel(UniqueFields)
     % === Reference Catalog Generation ===
     try
         [RefCat, Im, ~, ~, LogStr] = ml.generateKMTRefCat(DirThisField, Set, FieldPath, ...
-            'Threshold', 50, 'SNPrctileRange', opts.SNPrctileRangeRefCat);
+            'Threshold', 50, 'SNPrctileRange', opts.SNPrctileRangeRefCat,'HistoryKey',opts.HistoryKey);
         logmsg(LogFileField, LogStr);
         logmsg(LogFileField, sprintf('Reference catalog contains %d sources.', numel(RefCat.Catalog(:,1))));
         logmsg(LogFileField, 'Reference catalog generated successfully.');
