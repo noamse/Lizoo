@@ -255,6 +255,12 @@ function [AllSI,JD] = KMT_pipelineI(RawImageList, Args)
 
     [MS,ResRelZP] = pipeline.generic.proc2MatchedSources(AllSI, 'CooType','pix', 'FlagGood',[], 'DimEpoch',1, 'ColUse',Args.ColUse, 'AddUnUse',Args.ColUse, 'MatchedCols',Args.MatchedCols);   % 9.6 s -> 1.3s (with MatchMethod='unify')
         
+    % Next
+    % match to OGLE catalog and add V-I of sources
+    % Flag stars with neighboors/bad.
+    
+
+
 
     % DONE for now
     return;
