@@ -7,7 +7,11 @@ function [AllSI,JD] = KMT_pipelineI(RawImageList, Args)
         RawImageList                       = [];
 
         Args.DefScale                      = 0.4;  % Default scale if WCS is empty
-        Args.TempName                      = '/bigdata3/projects/KMTdata/Images/260058/2026_CTIO_I/BLG01/*.fits'; %/home/yossishv/KMTdata/ob260058_kmtc/2026/BLG01/subkmtcBLG01I202607*fits';%'subkmtcBLG01I202607*fits';'2023/BLG01/subkmt*.fits';%
+        Args.TempName                      = '/bigdata3/projects/KMTdata/Images/260058/KB260058_2026_CTIO_I_BLG01/RAW/*.fits';  %'/bigdata3/projects/KMTdata/Images/260058/2026_CTIO_I/BLG01/*.fits'; %/home/yossishv/KMTdata/ob260058_kmtc/2026/BLG01/subkmtcBLG01I202607*fits';%'subkmtcBLG01I202607*fits';'2023/BLG01/subkmt*.fits';%
+        
+        Args.RA                            = celestial.coo.convertdms('17:54:16.84','gH','d');   % deg
+        Args.Dec                           = celestial.coo.convertdms('-31:08:44.3','gD','d');   % deg
+
         Args.ThresholdBack                 = 4000;
         Args.UseMex                        =  true;
 
@@ -75,8 +79,7 @@ function [AllSI,JD] = KMT_pipelineI(RawImageList, Args)
         Args.proc2MatchedSourcesArgs       = {};
 
 
-        Args.MatchedCols                   = {'RA','Dec',...
-                                              'X','Y',...
+        Args.MatchedCols                   = {'X','Y',...
                                               'X1','Y1','X2','Y2','XY',...
                                               'SN','SN_1','SN_2',...
                                               'MAG_PSF','MAGERR_PSF','PSF_CHI2DOF','FLUX_PSF',...
@@ -85,9 +88,9 @@ function [AllSI,JD] = KMT_pipelineI(RawImageList, Args)
                                               'MAG_APER_4','MAGERR_APER_4',...
                                               'FLUX_APER_3',...
                                               'FLAGS',...
-                                              'BACK_IM','VAR_IM','BACK_ANNULUS','STD_ANNULUS',...
-                                              'FORCED'};
-        Args.ColUse                        = 'FORCED';
+                                              'BACK_IM','VAR_IM','BACK_ANNULUS','STD_ANNULUS'};
+
+        Args.ColUse                        = []; %'FORCED';
         Args.AddUnUse                      = true;
         
 
@@ -172,7 +175,7 @@ function [AllSI,JD] = KMT_pipelineI(RawImageList, Args)
         HistOK = ~imProc.quality.histAnomaly(AI);              %Currently not working correctly
 
         for Iim = 1:numel(AI)
-            NotConstantImage(Iim) = ~all(AI(Iim).ImageData.Image(:)==AI(Iim).ImageData.Image(1,1));
+            NotConstantImage(Iim) = ~all(AI(Iim).ImageData.Data(:)==AI(Iim).ImageData.Data(1,1));
         end
         
         FlagGoodImages = FlagGoodImages & NotEmptyImage & GoodGlobalBack & NotConstantImage & FlagMedian; % & HistOK
@@ -186,7 +189,7 @@ function [AllSI,JD] = KMT_pipelineI(RawImageList, Args)
 
     % Run the background estimation outside multiIterExtractor
     
-    AllSI=imProc.background.backVar(AllSI,'Method',@imUtil.background.modeVar_LogHist, 'MethodArgs',{{},{}});
+    AllSI=imProc.background.backVar(AllSI,'Method',{@imUtil.background.modeVar_LogHist, 'poiss'}, 'MethodArgs',{{},{}});
     %AI=imProc.background.backVar(AI,'Method',@imUtil.background.modeVar_LogHist,'MethodArgs',{{'DiluteFactor',1,'DiluteFactor1',1,'MinNbin1',10},{}});
 
 
@@ -245,8 +248,26 @@ function [AllSI,JD] = KMT_pipelineI(RawImageList, Args)
        
     end    
 
+
+    %
+    IsGood = AllSI.sizeCatalog>250;
+    AllSI  = AllSI(IsGood);
+
+    [MS,ResRelZP] = pipeline.generic.proc2MatchedSources(AllSI, 'CooType','pix', 'FlagGood',[], 'DimEpoch',1, 'ColUse',Args.ColUse, 'AddUnUse',Args.ColUse, 'MatchedCols',Args.MatchedCols);   % 9.6 s -> 1.3s (with MatchMethod='unify')
+        
+    % Next
+    % match to OGLE catalog and add V-I of sources
+    % Flag stars with neighboors/bad.
+    
+
+
+
     % DONE for now
     return;
+
+
+
+
 
 
 
