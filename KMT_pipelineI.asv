@@ -79,8 +79,7 @@ function [AllSI,JD] = KMT_pipelineI(RawImageList, Args)
         Args.proc2MatchedSourcesArgs       = {};
 
 
-        Args.MatchedCols                   = {'RA','Dec',...
-                                              'X','Y',...
+        Args.MatchedCols                   = {'X','Y',...
                                               'X1','Y1','X2','Y2','XY',...
                                               'SN','SN_1','SN_2',...
                                               'MAG_PSF','MAGERR_PSF','PSF_CHI2DOF','FLUX_PSF',...
@@ -249,13 +248,159 @@ function [AllSI,JD] = KMT_pipelineI(RawImageList, Args)
        
     end    
 
-
+    %return
     %
     IsGood = AllSI.sizeCatalog>250;
     AllSI  = AllSI(IsGood);
 
-    [MS,ResRelZP] = pipeline.generic.proc2MatchedSources(AllSI, 'CooType','pix', 'FlagGood',[], 'DimEpoch',1, 'ColUse',Args.ColUse, 'AddUnUse',Args.ColUse, 'MatchedCols',Args.MatchedCols);   % 9.6 s -> 1.3s (with MatchMethod='unify')
+
+    % Shift images and catalogs based on cross correlation into the frame
+    % of image index Iref
+    Iref = 500;
+    N = numel(AllSI);
+    ShiftX = nan(N,1);
+    ShiftY = nan(N,1);
+    NormPeakCorr = nan(N,1);
+    for I=1:1:N
+        ColX = AllSI(I).CatData.colname2ind('X');
+        ColY = AllSI(I).CatData.colname2ind('Y');
+
+        % clean catalog
+        Nsrc = AllSI(I).sizeCatalog;
+        for Isrc=1:1:Nsrc
+            Dist = tools.math.geometry.plane_dist(AllSI(I).CatData.Catalog(Isrc,ColX), AllSI(I).CatData.Catalog(Isrc,ColY), AllSI(I).CatData.Catalog(:,ColX), AllSI(I).CatData.Catalog(:,ColY));
+            Inear = find(Dist<0.5);
+            if Inear==1
+                % skip
+            else
+                if AllSI(I).CatData.Table.SN(Isrc)>=AllSI(I).CatData.Table.SN(Inear)
+                    Iremove = setdiff(Inear, Isrc);
+                    AllSI(I).CatData.Catalog(Iremove,:) = NaN;
+                end
+            end
+        end
+        IsN = isnan(AllSI(I).CatData.Catalog(:,ColX));
+        AllSI(I).CatData.Catalog = AllSI(I).CatData.Catalog(~IsN,:);
+                
+
+
+        [~,Info]=imUtil.filter.shiftFromXCorr(AllSI(I).Image, AllSI(Iref).Image);
+        ShiftX(I) = Info.ShiftXY(1);
+        ShiftY(I) = Info.ShiftXY(2);
+        NormPeakCorr(I) = Info.NormPeakCorr;
+
         
+        %Dist = tools.math.geometry.plane_dist(139,179, AllSI(I).CatData.Catalog(:,ColX), AllSI(I).CatData.Catalog(:,ColY));
+        %Idist = find(Dist<1);
+        %Idist
+
+
+        Shifted=imUtil.trans.mex.shift_lanczos3(AllSI(I).Image,-ShiftX(I),-ShiftY(I));
+
+        AllShifted(I) = AllSI(I).copy;
+        AllShifted(I).Image = Shifted;
+        
+        
+        AllShifted(I).CatData.Catalog(:,ColX) = AllShifted(I).CatData.Catalog(:,ColX) - ShiftX(I);
+        AllShifted(I).CatData.Catalog(:,ColY) = AllShifted(I).CatData.Catalog(:,ColY) - ShiftY(I);
+
+        AllShifted(I).CatData.sortrows('Y');
+        AllSI(I).CatData.sortrows('Y');
+
+    end
+    AllShifted = AllShifted(:);
+
+    FlagGoodEpoch = NormPeakCorr>0.5;
+
+    [MS,ResRelZP] = pipeline.generic.proc2MatchedSources(AllShifted, 'Radius',3, 'CooType','pix', 'FlagGood',[], 'DimEpoch',1, 'ColUse',Args.ColUse, 'AddUnUse',Args.ColUse, 'MatchedCols',Args.MatchedCols);   % 9.6 s -> 1.3s (with MatchMethod='unify')
+    MS.addSrcData;
+
+    FlagGoodSrc = sum(~isnan(MS.Data.X), 1)>800 & std(MS.Data.X,[],1,'omitnan')<1.0 & std(MS.Data.Y,[],1,'omitnan')<1.0;
+    sum(FlagGoodSrc)
+
+    % remove sources which are bad
+    MSc = MS.copy;
+    MSc.selectBySrcIndex(FlagGoodSrc);
+    MSc.selectByEpoch(FlagGoodEpoch);
+    MSc.addSrcData;
+
+
+
+    % match to OGLE catalog and add V-I of sources
+    load('./OGLEdata/OB260058/OB160058.mat');
+    OB160058.cast('single');
+    OgleRefCat = OB160058.CatData.Table;
+    OgleRefCat.Xogle = OgleRefCat.X;
+    OgleRefCat.Yogle = OgleRefCat.Y;
+    OgleRefCat.Xcor  = OgleRefCat.corrX;
+    OgleRefCat.Ycor  = OgleRefCat.corrY;
+    X = (OgleRefCat.Xcor - 230).*0.26 ./0.4 + 150;
+    Y = (OgleRefCat.Ycor - 230).*0.26 ./0.4 + 150;
+    OgleRefCat.X     = X;
+    OgleRefCat.Y     = Y;
+    FlagMag = OgleRefCat.I<19;
+    OgleRefCat = OgleRefCat(FlagMag,:);
+    OgleRefCat       = sortrows(OgleRefCat, 'Y');
+
+
+    SearchRadius = 1.5;
+    [Ind1, Dist1, Nmatch1, Ind2, Dist2, Nmatch2] = imUtil.match.mex.matchCatalogsXY(MS.SrcData.X(:), MS.SrcData.Y(:), OgleRefCat.X, OgleRefCat.Y, SearchRadius);
+
+    NN = ~isnan(Ind1);
+    MS.SrcData.I_ogle = nan(1,MS.Nsrc);
+    MS.SrcData.V_ogle = nan(1,MS.Nsrc);
+    MS.SrcData.I_ogle(NN) = OgleRefCat.I(Ind1(NN));
+    MS.SrcData.V_ogle(NN) = OgleRefCat.V(Ind1(NN));
+
+
+    % GOT HERE
+    return;
+
+
+
+
+
+
+
+    % Flag stars with neighboors/bad.
+    SearchRadius = 3.0;
+    [~, ~, Nmatch1] = imUtil.match.mex.matchCatalogsXY(MS.SrcData.X(:), MS.SrcData.Y(:), OgleRefCat.X, OgleRefCat.Y, SearchRadius);
+
+
+    SrcInfo.Nd10 = nan(MS.Nsrc,1);
+    SrcInfo.Nd1  = nan(MS.Nsrc,1);
+    SrcInfo.Is1  = nan(MS.Nsrc,1);
+    SrcInfo.Dist1  = nan(MS.Nsrc,1);
+    SrcInfo.I_ogle  = nan(MS.Nsrc,1);
+    SrcInfo.V_ogle  = nan(MS.Nsrc,1);
+    SrcInfo.MaxDeltaMag10  = -inf(MS.Nsrc,1);
+
+    for Isrc=1:1:MS.Nsrc
+        Dist = tools.math.geometry.plane_dist(MS.SrcData.X(Isrc), MS.SrcData.Y(Isrc), OgleRefCat.X, OgleRefCat.Y);
+        SrcInfo.Nd10(Isrc) = sum(Dist<5);
+        SrcInfo.Nd1(Isrc) = sum(Dist<1);
+        if SrcInfo.Nd1(Isrc)==1
+            SrcInfo.Is1(Isrc) = 1;
+            [IndDist1] = find(Dist<1);
+            SrcInfo.Dist1(Isrc)     = Dist(IndDist1);
+            SrcInfo.IndOgle(Isrc)   = IndDist1;
+            SrcInfo.I_ogle(Isrc)    = OgleRefCat.I(IndDist1);
+            SrcInfo.V_ogle(Isrc)    = OgleRefCat.V(IndDist1);
+
+            IndDist10 = find(Dist<5 & Dist>=1);
+            if numel(IndDist10)>0
+                % negative is good...
+                SrcInfo.MaxDeltaMag10(Isrc) = max(SrcInfo.I_ogle(Isrc) - OgleRefCat.I(IndDist10));
+            else
+                SrcInfo.MaxDeltaMag10(Isrc) = -Inf;
+            end
+
+        end
+    end
+
+    FlagGoodSrc = SrcInfo.MaxDeltaMag10<-0.5 & SrcInfo.Is1==1;
+
+
 
     % DONE for now
     return;
