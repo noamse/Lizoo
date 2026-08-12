@@ -2,7 +2,7 @@ function [LogFile,ResFlag]= processKMTEventField(EventNum, opts)
 % Process all KMTNet fields for a given EventNum, saving each in its own directory.
 % Usage:
 %   ml.scripts.processKMTEventField(192630, 'Site', 'CTIO', 'FieldToAvoid', 'BLG02');
-% [LogFile,ResFlag]= ml.scripts.processKMTEventField(192630,'CCDSEC', [106,406,106,406],'JDkey','MIDJD','HistoryKey','HISTORY','CatOffset',[0,0]);
+% [LogFile,ResFlag]= ml.scripts.processKMTEventField(192630,'CCDSEC', [106,406,106,406],'JDkey','MIDJD','HistoryKey','HISTORY','CatOffset',[0,0],'SNPrctileRangeRefCat',[80 97]);
 % [LogFile,ResFlag]= ml.scripts.processKMTEventField(260058);
 
 arguments
@@ -11,7 +11,7 @@ arguments
     opts.TargetBasePath = '~/KMTdata/Results/'
     opts.FieldToAvoid = ''
     opts.CCDSEC (1,4) double = [1,300,1,300]; % [106,406,106,406] for evt. 192630
-    opts.SNPrctileRangeRefCat = [50,95];
+    opts.SNPrctileRangeRefCat = [50,95]; % [80,97] looks more consistent for evt. 192630
     opts.SNRforPSF (1,1) double = 100
     opts.NRefMagBin (1,1) double = 12
     opts.MaxRefMag (1,1) double = 18.5
@@ -124,7 +124,9 @@ for iField = 1:numel(UniqueFields)
     end
     %ds9(Im); XY = [106,106]+RefCat.getCol({'X','Y'});  ds9.plot(XY(RefCat.getCol('I')<16.5,:))
     
-    ds9(Im); XY = [106,106]+RefCat.getCol({'X','Y'});  ds9.plot(XY(RefCat.getCol('I')<16.5,:));
+    ds9(Im); XY = [opts.CCDSEC(1),opts.CCDSEC(3)]+RefCat.getCol({'X','Y'});  
+    ds9.plot(XY(RefCat.getCol('I')<16.5,:),'Color','cyan','Size',3);
+    ds9.plot(XY(RefCat.getCol('I')<16.5,:),'Color','cyan','Size',1);
 
     BotDir = strcat(opts.TargetBasePath,'/runPipeBot/');
     if ~isfolder(BotDir)
