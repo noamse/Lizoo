@@ -210,8 +210,8 @@ for iField = 1:numel(UniqueFields)
         Set = readtable(MasterPath);
         Set = table2struct(Set);
 
-%         parfor Iep = 1:numel(DirThisField)
-        for Iep = 1:numel(DirThisField)
+        parfor Iep = 1:numel(DirThisField)
+%         for Iep = 1:numel(DirThisField)
             success = ImRed.runPipe(DirThisField{Iep}, FieldPath, 'SettingStruct', Set);
             logmsg(LogFileField, sprintf('%s image %d/%d', ...
                 ternary(success, '✓', '✗'), Iep, numel(DirThisField)));
