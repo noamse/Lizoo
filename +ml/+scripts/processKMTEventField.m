@@ -2,7 +2,7 @@ function [LogFile,ResFlag]= processKMTEventField(EventNum, opts)
 % Process all KMTNet fields for a given EventNum, saving each in its own directory.
 % Usage:
 %   ml.scripts.processKMTEventField(192630, 'Site', 'CTIO', 'FieldToAvoid', 'BLG02');
-% [LogFile,ResFlag]= ml.scripts.processKMTEventField(192630,'CCDSEC', [106,406,106,406],'JDkey','MIDJD','HistoryKey','HISTORY');
+% [LogFile,ResFlag]= ml.scripts.processKMTEventField(192630,'CCDSEC', [106,406,106,406],'JDkey','MIDJD','HistoryKey','HISTORY','CatOffset',[0,0]);
 % [LogFile,ResFlag]= ml.scripts.processKMTEventField(260058);
 
 arguments
@@ -35,6 +35,7 @@ arguments
     opts.RunPipeBotPath = '~/KMTdata/runPipeBot/';
     opts.JDkey='JD';           % 'MIDJD'   for evt. 192630
     opts.HistoryKey='COMMENT'; % 'HISTORY' for evt. 192630
+    opts.CatOffset = [56,53];  % [0,0] for evt. 192630; [56,53] for evt. 260058;
 end
 
 % Define root path
@@ -111,7 +112,8 @@ for iField = 1:numel(UniqueFields)
     % === Reference Catalog Generation ===
     try
         [RefCat, Im, ~, ~, LogStr] = ml.generateKMTRefCat(DirThisField, Set, FieldPath, ...
-            'Threshold', 50, 'SNPrctileRange', opts.SNPrctileRangeRefCat,'HistoryKey',opts.HistoryKey);
+            'Threshold', 50, 'SNPrctileRange', opts.SNPrctileRangeRefCat,'HistoryKey',opts.HistoryKey,...
+            'CatOffset',opts.CatOffset);
         logmsg(LogFileField, LogStr);
         logmsg(LogFileField, sprintf('Reference catalog contains %d sources.', numel(RefCat.Catalog(:,1))));
         logmsg(LogFileField, 'Reference catalog generated successfully.');

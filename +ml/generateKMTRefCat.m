@@ -16,6 +16,7 @@ arguments
     Args.MaxNumOfSourceImCat = 100;
     Args.MaxMagForFit = 16;
     Args.CandidateIndices=1:4:100;
+    Args.CatOffset = [0,0];
 end
 
 % Step 1: Choose best image from fixed index set based on lowest SECZ
@@ -48,7 +49,7 @@ fprintf('Selected reference image: %s (SECZ = %.3f)\n', ImPath, seczVals((bestId
 
 
 
-RefTab = ml.kmt.read_kmt9k_cat(ImPath,'MaxMag',Set.MaxRefMag,'HistoryKey',Args.HistoryKey );
+RefTab = ml.kmt.read_kmt9k_cat(ImPath,'MaxMag',Set.MaxRefMag,'HistoryKey',Args.HistoryKey,'CatOffset',Args.CatOffset );
 Im = AstroImage(ImPath );
 Im.Image=single(Im.Image);
 Im = imProc.sources.findMeasureSources(Im,'Threshold',40,'RemoveBadSources',true,'BackPar',...

@@ -2,13 +2,15 @@ function [LogFile,ResFlag]= processKMTEventField(EventNum, opts)
 % Process all KMTNet fields for a given EventNum, saving each in its own directory.
 % Usage:
 %   ml.scripts.processKMTEventField(192630, 'Site', 'CTIO', 'FieldToAvoid', 'BLG02');
+% [LogFile,ResFlag]= ml.scripts.processKMTEventField(192630,'CCDSEC', [106,406,106,406],'JDkey','MIDJD','HistoryKey','HISTORY');
+% [LogFile,ResFlag]= ml.scripts.processKMTEventField(260058);
 
 arguments
     EventNum;
     opts.Site = 'CTIO'
     opts.TargetBasePath = '~/KMTdata/Results/'
     opts.FieldToAvoid = ''
-    opts.CCDSEC (1,4) double = [106,406,106,406]
+    opts.CCDSEC (1,4) double = [1,300,1,300]; % [106,406,106,406] for evt. 192630
     opts.SNPrctileRangeRefCat = [50,95];
     opts.SNRforPSF (1,1) double = 100
     opts.NRefMagBin (1,1) double = 12
@@ -31,6 +33,9 @@ arguments
     opts.RunDetrend (1,1) logical = false
     opts.PathToImagesDirs = '/bigdata3/projects/KMTdata/Images/';
     opts.RunPipeBotPath = '~/KMTdata/runPipeBot/';
+    opts.JDkey='JD';           % 'MIDJD'   for evt. 192630
+    opts.HistoryKey='COMMENT'; % 'HISTORY' for evt. 192630
+    Args.CatOffset = [0,0]; 
 end
 
 % Define root path
@@ -55,7 +60,7 @@ switch upper(opts.Site)
         Imagebasedir = [opts.PathToImagesDirs, EventNumStr, '/', '*_I*/'];
 end
 
-[DirCell, ~] = ml.util.generateDirCell('BaseDir', Imagebasedir, 'Site', opts.Site, 'JDkey',opts.='MIDJD');
+[DirCell, ~] = ml.util.generateDirCell('BaseDir', Imagebasedir, 'Site', opts.Site, 'JDkey',opts.JDkey);
 FieldIDs = cellfun(@(fp) regexp(fp, 'BLG\d+', 'match', 'once'), DirCell, 'UniformOutput', false);
 UniqueFields = unique(FieldIDs(~cellfun(@isempty, FieldIDs)));
 ResFlag = true(numel(UniqueFields),1);
@@ -107,7 +112,7 @@ for iField = 1:numel(UniqueFields)
     % === Reference Catalog Generation ===
     try
         [RefCat, Im, ~, ~, LogStr] = ml.generateKMTRefCat(DirThisField, Set, FieldPath, ...
-            'Threshold', 50, 'SNPrctileRange', opts.SNPrctileRangeRefCat);
+            'Threshold', 50, 'SNPrctileRange', opts.SNPrctileRangeRefCat,'HistoryKey',opts.HistoryKey);
         logmsg(LogFileField, LogStr);
         logmsg(LogFileField, sprintf('Reference catalog contains %d sources.', numel(RefCat.Catalog(:,1))));
         logmsg(LogFileField, 'Reference catalog generated successfully.');
@@ -202,7 +207,8 @@ for iField = 1:numel(UniqueFields)
         Set = readtable(MasterPath);
         Set = table2struct(Set);
 
-        parfor Iep = 1:numel(DirThisField)
+%         parfor Iep = 1:numel(DirThisField)
+        for Iep = 1:numel(DirThisField)
             success = ImRed.runPipe(DirThisField{Iep}, FieldPath, 'SettingStruct', Set);
             logmsg(LogFileField, sprintf('%s image %d/%d', ...
                 ternary(success, '✓', '✗'), Iep, numel(DirThisField)));
