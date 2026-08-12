@@ -13,6 +13,7 @@ arguments
     Args.Ncols = 12; 
     Args.Verbose = true;
     Args.HistoryKey = 'HISTORY';
+    Args.CatOffset  = [0,0];
 end
 
 
@@ -25,6 +26,10 @@ history_str = Header.getVal(Args.HistoryKey);
 
 CCDSEC= str2double(split(history_str,{'[',':',',',']'}));
 CCDSEC(isnan(CCDSEC)) = [];
+
+CCDSEC(1:2) = CCDSEC(1:2) - Args.CatOffset(1);
+CCDSEC(3:4) = CCDSEC(3:4) - Args.CatOffset(2);
+
 
 catpath = dir([Args.CatalogDir,fieldname,ccdname,'*']);
 catpath  =ut.fullpath(catpath,1,'IsFile',true) ;
