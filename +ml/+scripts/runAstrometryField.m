@@ -78,6 +78,9 @@ else
 end
 % Step 6: Save output
 if Args.Save
+    if ~isfolder(Args.OutputDir)
+        mkdir(Args.OutputDir);
+    end
     OutputFileName = fullfile(Args.OutputDir, sprintf('AstrometryField_%s_%s_%s.mat', num2str(EventNum),Args.Site,Args.Field));
     delete(OutputFileName)
     save(OutputFileName, 'File', '-v7.3');
