@@ -1,9 +1,7 @@
 function    [PlxX,PlxY] = calculatePlxTerms(IF,Args)
-arguments
-    
+arguments    
     IF;
     Args.Coo = [4.6273,-0.4646];
-
 end
     [Ecoo] = celestial.SolarSys.calc_vsop87(IF.JD, 'Earth', 'e', 'E');
    
