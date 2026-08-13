@@ -8,13 +8,14 @@ arguments
     Args.TargetBasePath = '~/KMTdata/Results/'; % '/home/noamse/KMT/data/Results/';
     Args.TargetPath = '';
     Args.Site = 'CTIO';
+    Args.Field ='';
 end
 
 % if Args.RunReduction
 %     ml.kmt.processKMTEvent(EventNum, Args.processKMTEventsArgs{:});
 % end
 if isempty(Args.TargetPath)
-    AstCatsDirPath = [Args.TargetBasePath,'kmt',num2str(EventNum),'/',Args.Site,'/'];
+    AstCatsDirPath = [Args.TargetBasePath,'kmt',num2str(EventNum),'/',Args.Site,'/',Args.Field,'/'];
 else
     AstCatsDirPath = Args.TargetPath;
 end

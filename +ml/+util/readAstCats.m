@@ -13,7 +13,7 @@ end
 
 
 
-dir_obj= dir([DirPath,'*/*',Args.NamePattern,'*.', Args.FileType]);
+dir_obj= dir([DirPath,'*',Args.NamePattern,'*.', Args.FileType]);
 JD=[];
 astcats = AstroCatalog([1,numel(dir_obj)]);
 for i = 1:numel(dir_obj)
