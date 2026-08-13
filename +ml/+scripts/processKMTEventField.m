@@ -2,8 +2,9 @@ function [LogFile,ResFlag]= processKMTEventField(EventNum, opts)
 % Process all KMTNet fields for a given EventNum, saving each in its own directory.
 % Usage:
 %   ml.scripts.processKMTEventField(192630, 'Site', 'CTIO', 'FieldToAvoid', 'BLG02');
-% [LogFile,ResFlag]= ml.scripts.processKMTEventField(192630,'CCDSEC', [106,406,106,406],'JDkey','MIDJD','HistoryKey','HISTORY','CatOffset',[0,0],'SNPrctileRangeRefCat',[80 97],'FieldToAvoid', 'BLG41');
-% [LogFile,ResFlag]= ml.scripts.processKMTEventField(260058);
+% [LogFile,ResFlag]= ml.scripts.processKMTEventField(192630,'CCDSEC', [106,406,106,406],'JDkey','MIDJD','HistoryKey','HISTORY','CatOffset',[0,0],'SNPrctileRangeRefCat',[80 97]);
+% [LogFile,ResFlag]= ml.scripts.processKMTEventField(260058,'FieldToAvoid', 'BLG41');
+% [LogFile,ResFlag]= ml.scripts.processKMTEventField(260058,'CatOffset',[85,5],'FieldToAvoid', 'BLG01');
 
 arguments
     EventNum;

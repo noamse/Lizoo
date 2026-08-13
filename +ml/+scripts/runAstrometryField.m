@@ -1,6 +1,7 @@
 function OutputFileName = runAstrometryField(EventNum, Args)
 % ml.scripts.runAstrometryField(192630,'Field','BLG17')
 % ml.scripts.runAstrometryField(260058,'Field','BLG01')
+% ml.scripts.runAstrometryField(260058,'Field','BLG41')
 arguments
     EventNum
 
