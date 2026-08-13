@@ -4,8 +4,8 @@ arguments
     EventNum ;
     Args.processKMTEventsArgs = {};
     Args.RunReduction =false;
-    Args.PerSourcesTargetPath = '/home/noamse/KMT/data/EVENTS/';
-    Args.TargetBasePath = '/home/noamse/KMT/data/Results/';
+    Args.PerSourcesTargetPath = '~/KMTdata/Events/'; % '/home/noamse/KMT/data/EVENTS/';
+    Args.TargetBasePath = '~/KMTdata/Results/'; % '/home/noamse/KMT/data/Results/';
     Args.TargetPath = '';
     Args.Site = 'CTIO';
 end

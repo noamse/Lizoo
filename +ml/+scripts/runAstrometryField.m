@@ -1,13 +1,14 @@
 function OutputFileName = runAstrometryField(EventNum, Args)
+% ml.scripts.runAstrometryField(192630,'Field','BLG17')
 arguments
     EventNum
 
     % --- runOverFields arguments ---
     Args.RunReduction = false
     Args.processKMTEventsArgs = {}
-    Args.TargetBasePath = '/home/noamse/KMT/data/Results/'
+    Args.TargetBasePath = '~/KMTdata/Results/'
     Args.TargetPath = ''
-    Args.PerSourcesTargetPath = '/home/noamse/KMT/data/EVENTS/'
+    Args.PerSourcesTargetPath = '~/KMTdata/Events/'
     Args.Site = 'CTIO'
     Args.Field = '';
     % --- gaiaAstrometryKMT arguments ---
@@ -17,7 +18,7 @@ arguments
 
     % --- global flags ---
     Args.Save = true;
-    Args.OutputDir = '/home/noamse/KMT/data/Results/AstrometryField/'
+    Args.OutputDir = '~/KMTdata/Results/AstrometryField/'
 end
 
 % Step 1: Run over fields with selected arguments
