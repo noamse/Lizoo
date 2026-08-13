@@ -35,7 +35,7 @@ arguments
     opts.RunPipeBotPath = '~/KMTdata/runPipeBot/';
     opts.JDkey='JD';           % 'MIDJD'   for evt. 192630
     opts.HistoryKey='COMMENT'; % 'HISTORY' for evt. 192630
-    opts.CatOffset = [56,53];  % [0,0] for evt. 192630; [56,53] for evt. 260058;
+    opts.CatOffset = [56,53];  % [0,0] for evt. 192630; [56,53] for evt. 260058 BLG01; [85,5] for evt. 260058 BLG41;
 end
 
 % Define root path
