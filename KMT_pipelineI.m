@@ -189,7 +189,8 @@ function [AllSI,JD, MSc, AllShifted] = KMT_pipelineI(RawImageList, Args)
 
     % Run the background estimation outside multiIterExtractor
     
-    AllSI=imProc.background.backVar(AllSI,'Method',{@imUtil.background.modeVar_LogHist, 'poiss'}, 'MethodArgs',{{},{}});
+    [AllSI,FailedList]=imProc.background.backVar(AllSI,'Method',{@imUtil.background.modeVar_LogHist, 'poiss'}, 'MethodArgs',{{},{}});
+    % AllSI=imProc.background.backVar(AllSI,'Method',{@imUtil.background.modeVar_Hist});
     %AI=imProc.background.backVar(AI,'Method',@imUtil.background.modeVar_LogHist,'MethodArgs',{{'DiluteFactor',1,'DiluteFactor1',1,'MinNbin1',10},{}});
 
 

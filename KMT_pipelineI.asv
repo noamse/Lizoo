@@ -1,4 +1,4 @@
-function [AllSI,JD] = KMT_pipelineI(RawImageList, Args)
+function [AllSI,JD, MSc, AllShifted] = KMT_pipelineI(RawImageList, Args)
     %
     % Example: D.loadCalib();
     %          [AllSI, MS, Coadd, OnlyMP]=pipeline.last.pipes.pipelineI([],D.CI);
@@ -7,7 +7,7 @@ function [AllSI,JD] = KMT_pipelineI(RawImageList, Args)
         RawImageList                       = [];
 
         Args.DefScale                      = 0.4;  % Default scale if WCS is empty
-        Args.TempName                      = '/bigdata3/projects/KMTdata/Images/260058/KB260058_2026_CTIO_I_BLG01/RAW/*.fits';  %'/bigdata3/projects/KMTdata/Images/260058/2026_CTIO_I/BLG01/*.fits'; %/home/yossishv/KMTdata/ob260058_kmtc/2026/BLG01/subkmtcBLG01I202607*fits';%'subkmtcBLG01I202607*fits';'2023/BLG01/subkmt*.fits';%
+        Args.TempName                      = '/bigdata3/projects/KMTdata/Images/260058/KB260058_20*_CTIO_I_BLG01/RAW/*.fits';  %'/bigdata3/projects/KMTdata/Images/260058/2026_CTIO_I/BLG01/*.fits'; %/home/yossishv/KMTdata/ob260058_kmtc/2026/BLG01/subkmtcBLG01I202607*fits';%'subkmtcBLG01I202607*fits';'2023/BLG01/subkmt*.fits';%
         
         Args.RA                            = celestial.coo.convertdms('17:54:16.84','gH','d');   % deg
         Args.Dec                           = celestial.coo.convertdms('-31:08:44.3','gD','d');   % deg
@@ -189,7 +189,8 @@ function [AllSI,JD] = KMT_pipelineI(RawImageList, Args)
 
     % Run the background estimation outside multiIterExtractor
     
-    AllSI=imProc.background.backVar(AllSI,'Method',{@imUtil.background.modeVar_LogHist, 'poiss'}, 'MethodArgs',{{},{}});
+    [AllSI,FailedList]=imProc.background.backVar(AllSI,'Method',{@imUtil.background.modeVar_LogHist, 'poiss'}, 'MethodArgs',{{},{}});
+    % AllSI=imProc.background.backVar(AllSI,'Method',{@imUtil.background.modeVar_Hist});
     %AI=imProc.background.backVar(AI,'Method',@imUtil.background.modeVar_LogHist,'MethodArgs',{{'DiluteFactor',1,'DiluteFactor1',1,'MinNbin1',10},{}});
 
 
@@ -312,22 +313,15 @@ function [AllSI,JD] = KMT_pipelineI(RawImageList, Args)
 
     FlagGoodEpoch = NormPeakCorr>0.5;
 
-    [MS,ResRelZP] = pipeline.generic.proc2MatchedSources(AllShifted, 'Radius',3, 'CooType','pix', 'FlagGood',[], 'DimEpoch',1, 'ColUse',Args.ColUse, 'AddUnUse',Args.ColUse, 'MatchedCols',Args.MatchedCols);   % 9.6 s -> 1.3s (with MatchMethod='unify')
+    [MS,ResRelZP] = pipeline.generic.proc2MatchedSources(AllShifted, 'Radius',3, 'CooType','pix', 'FlagGood',[], 'DimEpoch',1, 'ColUse',Args.ColUse, 'AddUnUse',Args.ColUse, 'MatchedCols',Args.MatchedCols,'unifyArgs',{'IsSpherical',false});   % 9.6 s -> 1.3s (with MatchMethod='unify')
     MS.addSrcData;
 
     FlagGoodSrc = sum(~isnan(MS.Data.X), 1)>800 & std(MS.Data.X,[],1,'omitnan')<1.0 & std(MS.Data.Y,[],1,'omitnan')<1.0;
     sum(FlagGoodSrc)
 
-    % remove sources which are bad
-    MSc = MS.copy;
-    MSc.selectBySrcIndex(FlagGoodSrc);
-    MSc.selectByEpoch(FlagGoodEpoch);
-    MSc.addSrcData;
-
-
 
     % match to OGLE catalog and add V-I of sources
-    load('./OGLEdata/OB260058/OB160058.mat');
+    load('OB160058.mat');% ./OGLEdata/OB260058/OB160058.mat
     OB160058.cast('single');
     OgleRefCat = OB160058.CatData.Table;
     OgleRefCat.Xogle = OgleRefCat.X;
@@ -352,6 +346,11 @@ function [AllSI,JD] = KMT_pipelineI(RawImageList, Args)
     MS.SrcData.I_ogle(NN) = OgleRefCat.I(Ind1(NN));
     MS.SrcData.V_ogle(NN) = OgleRefCat.V(Ind1(NN));
 
+    % remove sources which are bad
+    MSc = MS.copy;
+    MSc.selectBySrcIndex(FlagGoodSrc);
+    MSc.selectByEpoch(FlagGoodEpoch);
+    MSc.addSrcData;
 
     % GOT HERE
     return;
