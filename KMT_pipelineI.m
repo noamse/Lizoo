@@ -7,7 +7,7 @@ function [AllSI,JD, MSc, AllShifted] = KMT_pipelineI(RawImageList, Args)
         RawImageList                       = [];
 
         Args.DefScale                      = 0.4;  % Default scale if WCS is empty
-        Args.TempName                      = '/bigdata3/projects/KMTdata/Images/260058/KB260058_20*_CTIO_I_BLG01/RAW/*.fits';  %'/bigdata3/projects/KMTdata/Images/260058/2026_CTIO_I/BLG01/*.fits'; %/home/yossishv/KMTdata/ob260058_kmtc/2026/BLG01/subkmtcBLG01I202607*fits';%'subkmtcBLG01I202607*fits';'2023/BLG01/subkmt*.fits';%
+        Args.TempName                      = '/bigdata3/projects/KMTdata/Images/260058/KB260058_20*_CTIO_I_BLG01/RAW/*I*.fits';  %'/bigdata3/projects/KMTdata/Images/260058/2026_CTIO_I/BLG01/*I*.fits'; %/home/yossishv/KMTdata/ob260058_kmtc/2026/BLG01/subkmtcBLG01I202607*fits';%'subkmtcBLG01I202607*fits';'2023/BLG01/subkmt*I*.fits';%
         
         Args.RA                            = celestial.coo.convertdms('17:54:16.84','gH','d');   % deg
         Args.Dec                           = celestial.coo.convertdms('-31:08:44.3','gD','d');   % deg
