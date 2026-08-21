@@ -313,7 +313,7 @@ function [AllSI,JD, MSc, AllShifted] = KMT_pipelineI(RawImageList, Args)
 
     FlagGoodEpoch = NormPeakCorr>0.5;
 
-    [MS,ResRelZP] = pipeline.generic.proc2MatchedSources(AllShifted, 'Radius',3, 'CooType','pix', 'FlagGood',[], 'DimEpoch',1, 'ColUse',Args.ColUse, 'AddUnUse',Args.ColUse, 'MatchedCols',Args.MatchedCols,'unifyArgs',{'IsSpherical',false});   % 9.6 s -> 1.3s (with MatchMethod='unify')
+    [MS,ResRelZP] = pipeline.generic.proc2MatchedSources(AllShifted, 'Radius',3, 'CooType','pix', 'FlagGood',[], 'DimEpoch',1, 'ColUse',Args.ColUse, 'AddUnUse',Args.AddUnUse, 'MatchedCols',Args.MatchedCols,'unifyArgs',{'IsSpherical',false, 'MinNdet',200});   % 9.6 s -> 1.3s (with MatchMethod='unify')
     MS.addSrcData;
 
     FlagGoodSrc = sum(~isnan(MS.Data.X), 1)>800 & std(MS.Data.X,[],1,'omitnan')<1.0 & std(MS.Data.Y,[],1,'omitnan')<1.0;
