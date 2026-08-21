@@ -228,8 +228,18 @@ function [AllSI,JD, MSc, AllShifted] = KMT_pipelineI(RawImageList, Args)
                                                 'populatePSFArgs',Args.PopPSFArgs,...
                                                 'AddSkyCoo',false);  % 82 s (for 203 Im; with UseMex=true;)
     else
+        % Guard each image separately: a single bad image must not abort the
+        % whole visit. See AstroPack issue #1223 - an image containing dead
+        % (non-positive) pixels can get a negative background, hence a
+        % non-positive variance and a non-finite S/N, which aborts the
+        % extractor. Failed images are reported and dropped below.
+        FailedExtract = false(NgoodIm,1);
+        MsgExtract    = cell(NgoodIm,1);
+
         parfor Iobj=1:NgoodIm
-                [AllSI(Iobj)] = imProc.sources.multiIterExtractor(AllSI(Iobj), Args.multiIterExtractorArgs{:},...
+            SingleSI = AllSI(Iobj);
+            try
+                [SingleSI] = imProc.sources.multiIterExtractor(SingleSI, Args.multiIterExtractorArgs{:},...
                                                 'JD',JD(Iobj),...
                                                 'ColCell',Args.ColCell,...
                                                 'UseMex',Args.UseMex,...
@@ -245,8 +255,28 @@ function [AllSI,JD, MSc, AllShifted] = KMT_pipelineI(RawImageList, Args)
                                                 'Threshold',Args.Threshold,...
                                                 'populatePSFArgs',Args.PopPSFArgs,...
                                                 'AddSkyCoo',false);  % 18s with alreay open PP(16) (for 203 Im; with UseMex=true;)                                                  
+            catch ME
+                FailedExtract(Iobj) = true;
+                MsgExtract{Iobj}    = ME.message;
+            end
+            % always assign the sliced output, also when the extraction failed
+            AllSI(Iobj) = SingleSI;
         end
-       
+
+        % report and drop the images whose extraction failed
+        if any(FailedExtract)
+            IndFailed = find(FailedExtract);
+            for Ifail=1:1:numel(IndFailed)
+                fprintf('Source extraction failed for image %d (JD %.5f) - image dropped: %s\n',...
+                        IndFailed(Ifail), JD(IndFailed(Ifail)), MsgExtract{IndFailed(Ifail)});
+            end
+            fprintf('Source extraction: %d of %d images dropped\n', numel(IndFailed), NgoodIm);
+
+            AllSI   = AllSI(~FailedExtract);
+            JD      = JD(~FailedExtract);
+            NgoodIm = numel(AllSI);
+        end
+
     end    
 
     %return
