@@ -30,9 +30,13 @@ function [OutputFileName, File] = runAstrometryMSc(MS, Args)
 %                   inserted as column 'I' of the matched catalog.
 %                   Default is 'I_ogle'.
 %            'Save' - Save the output structure. Default is true.
-%            'OutputDir' - Output directory. When empty and the input was a
-%                   file, an AstrometryMSc directory next to it is used.
-%                   Default is ''.
+%            'OutputDir' - Output directory. It is created and checked for
+%                   writability before any of the work is done, since a save
+%                   that fails afterwards discards the whole run. Pass '' to
+%                   place the results next to the input file instead - but
+%                   note that the KMT results tree is an NFS mount that may
+%                   well be read-only. Default is
+%                   '~/KMTdata/Results/AstrometryMSc/'.
 %            'Verbosity' - 0 is silent. Default is 0.
 % Output : - Full path of the saved file, empty when nothing was saved.
 %          - The output structure, with the same field names as the one
@@ -57,7 +61,7 @@ function [OutputFileName, File] = runAstrometryMSc(MS, Args)
         Args.MaxMag                    = 18;
         Args.RefMagField               = 'I_ogle';
         Args.Save                      = true;
-        Args.OutputDir                 = '';
+        Args.OutputDir                 = '~/KMTdata/Results/AstrometryMSc/';
         Args.Verbosity                 = 0;
     end
 
@@ -66,6 +70,14 @@ function [OutputFileName, File] = runAstrometryMSc(MS, Args)
         SourceFile = char(MS);
     else
         SourceFile = '';
+    end
+
+    % The output directory is resolved and tested first: the detrending takes
+    % tens of minutes, and a save that fails at the end of it loses everything.
+    OutputDir = '';
+    if Args.Save
+        OutputDir = prepareOutputDir(Args.OutputDir, SourceFile);
+        report(Args.Verbosity, 'Results will be written to %s\n', OutputDir);
     end
 
     % --- Step 1: convert and detrend ---------------------------------------
@@ -127,16 +139,6 @@ function [OutputFileName, File] = runAstrometryMSc(MS, Args)
 
     % --- Step 5: save -------------------------------------------------------
     if Args.Save
-        OutputDir = Args.OutputDir;
-        if isempty(OutputDir)
-            if isempty(SourceFile)
-                error('runAstrometryMSc:NoOutputDir','OutputDir must be given when the input is an object rather than a file');
-            end
-            OutputDir = fullfile(fileparts(SourceFile), 'AstrometryMSc');
-        end
-        if ~isfolder(OutputDir)
-            mkdir(OutputDir);
-        end
         OutputFileName = fullfile(OutputDir, sprintf('AstrometryMSc_%s_%s_%s.mat', ...
                                                      num2str(Args.EventNum), Args.Site, Args.Field));
         if isfile(OutputFileName)
@@ -178,6 +180,38 @@ function [Matched, ResAstrometry] = buildMatchedCatalog(IFsys, Info, Args)
         RefMag = nan(size(X));
     end
     Matched.insertCol(RefMag, Inf, {'I'}, {'mag'});
+end
+
+
+function OutputDir = prepareOutputDir(OutputDir, SourceFile)
+    % Resolve the output directory and prove that it can be written to.
+    % An existing directory owned by the user can still be read-only, which is
+    % what happens when the KMT results tree is mounted read-only over NFS.
+    if isempty(OutputDir)
+        if isempty(SourceFile)
+            error('runAstrometryMSc:NoOutputDir','OutputDir must be given when the input is an object rather than a file');
+        end
+        OutputDir = fullfile(fileparts(SourceFile), 'AstrometryMSc');
+    end
+    OutputDir = char(OutputDir);
+    if startsWith(OutputDir, '~')
+        OutputDir = fullfile(getenv('HOME'), OutputDir(2:end));
+    end
+
+    if ~isfolder(OutputDir)
+        [IsOk, Msg] = mkdir(OutputDir);
+        if ~IsOk
+            error('runAstrometryMSc:OutputDirNotWritable','Cannot create the output directory %s: %s', OutputDir, Msg);
+        end
+    end
+
+    TestFile = fullfile(OutputDir, sprintf('.writetest_%s', char(matlab.lang.internal.uuid)));
+    Fid = fopen(TestFile, 'w');
+    if Fid < 0
+        error('runAstrometryMSc:OutputDirNotWritable','The output directory %s is not writable', OutputDir);
+    end
+    fclose(Fid);
+    delete(TestFile);
 end
 
 
