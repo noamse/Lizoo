@@ -17,6 +17,12 @@ function [OutputFileName, File] = runAstrometryMSc(MS, Args)
 %                   No tables are written when empty. Default is ''.
 %            'GaiaCalib' - Run the Gaia proper-motion calibration. Requires
 %                   catsHTM and a successful WCS solution. Default is false.
+%                   With it off, and it does not currently solve for the
+%                   300x300 pixel cut-outs of KMT_pipelineI, the fitted proper
+%                   motions in IFsys.ParS(3:4,:) stay in the registered pixel
+%                   frame: their orientation on the sky is unknown, and the
+%                   conversion to mas assumes exactly 400 mas/pix isotropically
+%                   rather than measuring it. Treat them as relative.
 %            'Scale' - Pixel scale [arcsec/pix] handed to astrometryCore.
 %                   Default is 0.4.
 %            'astrometryCoreArgs' - Cell array of arguments passed on to
@@ -40,7 +46,9 @@ function [OutputFileName, File] = runAstrometryMSc(MS, Args)
 %            'Verbosity' - 0 is silent. Default is 0.
 % Output : - Full path of the saved file, empty when nothing was saved.
 %          - The output structure, with the same field names as the one
-%            written by ml.scripts.runAstrometryField.
+%            written by ml.scripts.runAstrometryField. ParScalibrated,
+%            GaiaTable and DeltaPM_KMT_GAIA are empty unless GaiaCalib both
+%            ran and succeeded.
 % Author : ULTRASAT team (Aug 2026)
 % Example: OutFile = ml.scripts.runAstrometryMSc(...
 %              '/bigdata3/projects/KMTdata/Results16_26/KMT_260058_BLG41_MSc.mat', ...
