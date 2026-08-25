@@ -157,6 +157,38 @@ end
 
 
 % -------------------------------------------------------------------------
+function OutputDir = prepareOutputDir(OutputDir, SourceFile)
+    % Resolve the output directory and prove that it can be written to.
+    % An existing directory owned by the user can still be read-only, which is
+    % what happens when the KMT results tree is mounted read-only over NFS.
+    if isempty(OutputDir)
+        if isempty(SourceFile)
+            error('runAstrometryMSc:NoOutputDir','OutputDir must be given when the input is an object rather than a file');
+        end
+        OutputDir = fullfile(fileparts(SourceFile), 'AstrometryMSc');
+    end
+    OutputDir = char(OutputDir);
+    if startsWith(OutputDir, '~')
+        OutputDir = fullfile(getenv('HOME'), OutputDir(2:end));
+    end
+
+    if ~isfolder(OutputDir)
+        [IsOk, Msg] = mkdir(OutputDir);
+        if ~IsOk
+            error('runAstrometryMSc:OutputDirNotWritable','Cannot create the output directory %s: %s', OutputDir, Msg);
+        end
+    end
+
+    TestFile = fullfile(OutputDir, sprintf('.writetest_%s', char(matlab.lang.internal.uuid)));
+    Fid = fopen(TestFile, 'w');
+    if Fid < 0
+        error('runAstrometryMSc:OutputDirNotWritable','The output directory %s is not writable', OutputDir);
+    end
+    fclose(Fid);
+    delete(TestFile);
+end
+
+
 function report(Verbosity, varargin)
     % Print only when verbosity has been switched on
     if Verbosity > 0
