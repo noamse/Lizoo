@@ -376,10 +376,13 @@ function [AllSI,JD, MSc, AllShifted] = KMT_pipelineI(RawImageList, Args)
     MS.SrcData.I_ogle(NN) = OgleRefCat.I(Ind1(NN));
     MS.SrcData.V_ogle(NN) = OgleRefCat.V(Ind1(NN));
 
-    % remove sources which are bad
+    % remove sources which are bad.
+    % selectBySrcIndex and selectByEpoch default to CreateNewObj=true, i.e.
+    % they modify and return a copy: called as bare statements they left MSc
+    % untouched, so neither selection was ever applied to a saved object.
     MSc = MS.copy;
-    MSc.selectBySrcIndex(FlagGoodSrc);
-    MSc.selectByEpoch(FlagGoodEpoch);
+    MSc.selectBySrcIndex(FlagGoodSrc, 'CreateNewObj',false);
+    MSc.selectByEpoch(FlagGoodEpoch, 'CreateNewObj',false);
     MSc.addSrcData;
 
     % Per-epoch registration and pointing information, kept so that this
