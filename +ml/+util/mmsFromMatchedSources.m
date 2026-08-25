@@ -84,7 +84,15 @@ function [Obj, CelestialCoo, Info] = mmsFromMatchedSources(MS, Args)
 %                                in with real colours. The bins IterFit builds
 %                                are equal-population quantiles, so they will
 %                                span more than one bin.
-%                   Default is 'fill'.
+%                   Default is 'ownbin'. Measured on BLG41 at 4330 epochs,
+%                   where 87% of the sources have a real colour and so the
+%                   fill barely invents anything, the four modes give a bright
+%                   source rstd of X/Y 8.70/7.85 ('fill'), 8.91/8.02
+%                   ('fillcmd'), 7.41/7.80 ('restrict', but 515 sources rather
+%                   than 592) and 7.43/7.26 ('ownbin'). 'ownbin' keeps every
+%                   source and is the best or close to it throughout, most
+%                   clearly between 16th and 17th magnitude, 11.8 mas against
+%                   15.4 for 'fill'.
 %            'ColourRange' - Colours outside this range are treated as
 %                   invalid. Default is [0 5].
 %            'MaxValidRefMag' - Reference magnitudes at or above this value
@@ -132,7 +140,7 @@ function [Obj, CelestialCoo, Info] = mmsFromMatchedSources(MS, Args)
         Args.ApplySysRemPhot          = true;
         Args.SysRemPhotometryArgs     = {'ThreshDeltaS2',1,'Niter',10};
         Args.ColourFields             = {'V_ogle','I_ogle'};
-        Args.ColourMode               = 'fill';
+        Args.ColourMode               = 'ownbin';
         Args.ColourRange              = [0 5];
         Args.MaxValidRefMag           = 99;
         Args.NColourBins              = 6;
