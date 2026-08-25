@@ -98,7 +98,13 @@ function [OutputFileName, File] = runAstrometryMSc(MS, Args)
 
     if Args.GaiaCalib
         try
-            [Matched, ResAstrometry] = buildMatchedCatalog(IFsys, Info, Args);
+            RefMag = [];
+            if isstruct(Info.SrcData) && isfield(Info.SrcData, Args.RefMagField)
+                RefMag = Info.SrcData.(Args.RefMagField);
+            end
+            [Matched, ResAstrometry] = ml.util.matchedCatFromIterFit(IFsys, ...
+                'RefMag', RefMag, 'Scale', Args.Scale, ...
+                'astrometryCoreArgs', Args.astrometryCoreArgs);
             [ParScalibrated, T, DeltaPM_KMT_GAIA, OutLiersRMSvsMag, ...
              PMRA_kmt_to_gaia_fit, PMDec_kmt_to_gaia_fit] = ...
                 ml.scripts.gaiaAstrometryKMT(IFsys, Matched, ...
@@ -151,70 +157,6 @@ end
 
 
 % -------------------------------------------------------------------------
-function [Matched, ResAstrometry] = buildMatchedCatalog(IFsys, Info, Args)
-    % Solve a WCS from the fitted source positions and return a catalog with
-    % RA, Dec and the reference magnitude, one row per IterFit source.
-    X   = IFsys.ParS(1,:).';
-    Y   = IFsys.ParS(2,:).';
-    Mag = IFsys.medianFieldSource({'MAG_PSF'});
-
-    Cat = AstroCatalog({[X, Y, Mag]}, 'ColNames', {'X','Y','MAG_PSF'}, ...
-                                      'ColUnits', {'pix','pix','mag'});
-
-    RAdeg  = IFsys.CelestialCoo(1) .* 180 ./ pi;
-    Decdeg = IFsys.CelestialCoo(2) .* 180 ./ pi;
-
-    [ResAstrometry, Matched] = imProc.astrometry.astrometryCore(Cat, ...
-        'RA', RAdeg, 'Dec', Decdeg, 'CooUnits', 'deg', ...
-        'Scale', Args.Scale, 'CatColNamesMag', 'MAG_PSF', ...
-        Args.astrometryCoreArgs{:});
-
-    if ~ResAstrometry.Success
-        error('runAstrometryMSc:NoWCS','astrometryCore did not converge on a WCS (%d candidate solutions)', ResAstrometry.Nsolutions);
-    end
-
-    % gaiaAstrometryKMT reads the reference magnitude as column 'I'
-    if isstruct(Info.SrcData) && isfield(Info.SrcData, Args.RefMagField)
-        RefMag = Info.SrcData.(Args.RefMagField)(:);
-    else
-        RefMag = nan(size(X));
-    end
-    Matched.insertCol(RefMag, Inf, {'I'}, {'mag'});
-end
-
-
-function OutputDir = prepareOutputDir(OutputDir, SourceFile)
-    % Resolve the output directory and prove that it can be written to.
-    % An existing directory owned by the user can still be read-only, which is
-    % what happens when the KMT results tree is mounted read-only over NFS.
-    if isempty(OutputDir)
-        if isempty(SourceFile)
-            error('runAstrometryMSc:NoOutputDir','OutputDir must be given when the input is an object rather than a file');
-        end
-        OutputDir = fullfile(fileparts(SourceFile), 'AstrometryMSc');
-    end
-    OutputDir = char(OutputDir);
-    if startsWith(OutputDir, '~')
-        OutputDir = fullfile(getenv('HOME'), OutputDir(2:end));
-    end
-
-    if ~isfolder(OutputDir)
-        [IsOk, Msg] = mkdir(OutputDir);
-        if ~IsOk
-            error('runAstrometryMSc:OutputDirNotWritable','Cannot create the output directory %s: %s', OutputDir, Msg);
-        end
-    end
-
-    TestFile = fullfile(OutputDir, sprintf('.writetest_%s', char(matlab.lang.internal.uuid)));
-    Fid = fopen(TestFile, 'w');
-    if Fid < 0
-        error('runAstrometryMSc:OutputDirNotWritable','The output directory %s is not writable', OutputDir);
-    end
-    fclose(Fid);
-    delete(TestFile);
-end
-
-
 function report(Verbosity, varargin)
     % Print only when verbosity has been switched on
     if Verbosity > 0
