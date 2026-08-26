@@ -81,9 +81,13 @@ function [Obj, CelestialCoo, Info] = mmsFromMatchedSources(MS, Args)
 %                   'ownbin'   - keep all sources, but place the colourless
 %                                ones below every valid colour so that they
 %                                occupy the lowest bins instead of being mixed
-%                                in with real colours. The bins IterFit builds
-%                                are equal-population quantiles, so they will
-%                                span more than one bin.
+%                                in with real colours. @IterFit/generateBins
+%                                bins by equal population, so a colourless
+%                                fraction f takes up f*NColourBins of them
+%                                whatever value it is given, leaving the real
+%                                colours (1-f)*NColourBins. This works while
+%                                most sources have a colour and collapses when
+%                                they do not: see MinFracOwnBin.
 %                   Default is 'ownbin'. Measured on BLG41 at 4330 epochs,
 %                   where 87% of the sources have a real colour and so the
 %                   fill barely invents anything, the four modes give a bright
@@ -93,6 +97,14 @@ function [Obj, CelestialCoo, Info] = mmsFromMatchedSources(MS, Args)
 %                   source and is the best or close to it throughout, most
 %                   clearly between 16th and 17th magnitude, 11.8 mas against
 %                   15.4 for 'fill'.
+%            'MinFracOwnBin' - Least fraction of sources that must carry a real
+%                   colour for 'ownbin' to be usable. Below it the colourless
+%                   sources take so many of the equal-population bins that the
+%                   real colours are left sharing one or two, and the airmass
+%                   model can no longer tell colours apart; 'fillcmd' is used
+%                   instead and Info.Colour records the substitution. Default
+%                   is 0.5, i.e. the real colours must keep at least half the
+%                   bins. Set to 0 to force 'ownbin' regardless.
 %            'ColourRange' - Colours outside this range are treated as
 %                   invalid. Default is [0 5].
 %            'MaxValidRefMag' - Reference magnitudes at or above this value
@@ -141,6 +153,7 @@ function [Obj, CelestialCoo, Info] = mmsFromMatchedSources(MS, Args)
         Args.SysRemPhotometryArgs     = {'ThreshDeltaS2',1,'Niter',10};
         Args.ColourFields             = {'V_ogle','I_ogle'};
         Args.ColourMode               = 'ownbin';
+        Args.MinFracOwnBin            = 0.5;
         Args.ColourRange              = [0 5];
         Args.MaxValidRefMag           = 99;
         Args.NColourBins              = 6;
@@ -545,18 +558,34 @@ function [Obj, SrcData, Colour, FlagColourSrc] = buildColour(Obj, SrcData, Args)
     Colour.NValid   = sum(IsValid);
     Colour.FracValid = mean(IsValid);
     Colour.Median   = median(C(IsValid));
-    Colour.Mode     = Args.ColourMode;
     if Colour.NValid < 2
         error('mmsFromMatchedSources:NoValidColour','Fewer than two sources have a valid colour');
     end
     report(Args.Verbosity, 'Valid colour for %d/%d sources (%.1f%%)\n', Colour.NValid, numel(C), 100.*Colour.FracValid);
 
-    switch lower(Args.ColourMode)
+    % 'ownbin' relies on the colourless sources taking only a few of the
+    % equal-population bins, which stops being true once they are the majority
+    Mode = lower(Args.ColourMode);
+    Colour.ModeRequested = Mode;
+    Colour.ModeSubstituted = false;
+    if strcmp(Mode,'ownbin') && Colour.FracValid < Args.MinFracOwnBin
+        Mode = 'fillcmd';
+        Colour.ModeSubstituted = true;
+        fprintf(['ColourMode ''ownbin'' needs a real colour for at least %.0f%% of the sources and only ', ...
+                 '%.1f%% have one; the colourless ones would take %.1f of the %d bins and leave the real ', ...
+                 'colours %.1f. Using ''fillcmd'' instead.\n'], 100.*Args.MinFracOwnBin, ...
+                100.*Colour.FracValid, (1-Colour.FracValid).*Args.NColourBins, Args.NColourBins, ...
+                Colour.FracValid.*Args.NColourBins);
+    end
+    Colour.Mode = Mode;
+
+    switch Mode
         case 'restrict'
             FlagColourSrc = IsValid;
             Obj.selectBySrcIndex(FlagColourSrc, 'CreateNewObj', false);
             SrcData = selectSrcData(SrcData, FlagColourSrc);
             C       = C(FlagColourSrc);
+            IsValid = IsValid(FlagColourSrc);
 
         case 'fill'
             C(~IsValid) = Colour.Median;
@@ -566,7 +595,7 @@ function [Obj, SrcData, Colour, FlagColourSrc] = buildColour(Obj, SrcData, Args)
 
         case 'ownbin'
             % One bin width below every valid colour, so that discretize
-            % gathers the colourless sources into the lowest bin.
+            % gathers the colourless sources into the lowest bins.
             ValidSpread = spread(C(IsValid));
             C(~IsValid) = min(C(IsValid)) - max(ValidSpread./Args.NColourBins, 0.1);
 
@@ -583,8 +612,31 @@ function [Obj, SrcData, Colour, FlagColourSrc] = buildColour(Obj, SrcData, Args)
         C = C - median(C, 'omitnan');
     end
     Colour.C = C;
+    Colour = addBinDiagnostics(Colour, C, IsValid, Args.NColourBins);
 
     Obj.Data.C = ones(Obj.Nepoch,1) * C;
+end
+
+
+function Colour = addBinDiagnostics(Colour, C, IsValid, NBins)
+    % Describe the bins @IterFit/generateBins will build from this colour, so
+    % that a degenerate binning is visible in Info rather than silently
+    % costing the airmass model its colour dependence.
+    Edges = quantile(C, linspace(0, 1, NBins+1));
+    Bin   = discretize(C, Edges);
+    Colour.BinEdges     = Edges;
+    Colour.BinCounts    = accumarray(Bin(~isnan(Bin)).', 1).';
+    Colour.NBinsRealCol = numel(unique(Bin(IsValid & ~isnan(Bin))));
+    Spread = nan(1, NBins);
+    for Ibin = 1:NBins
+        InBin = Bin==Ibin;
+        if any(InBin)
+            Spread(Ibin) = max(C(InBin)) - min(C(InBin));
+        end
+    end
+    Colour.BinSpread = Spread;
+    % a bin whose colours are all but identical cannot constrain a colour term
+    Colour.NBinsDegenerate = sum(Spread < 1e-3);
 end
 
 
