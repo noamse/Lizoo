@@ -64,6 +64,33 @@ than `fill`; on BLG01 the four are within 3% of each other. `restrict` is
 dangerous when few sources have colours: on BLG01 it left 168 sources and the
 result was clearly the worst.
 
+**Reference stars for the frame** — top level on both scripts
+
+By default the per-epoch transformation is fitted from every surviving source,
+each weighted by the median of its weights over epochs, so faint and blended
+stars help define the frame that everything is then measured against.
+`UseRefSources` fits it from a small clean subset instead, while still solving
+the source parameters for every star.
+
+| parameter | default | note |
+|---|---|---|
+| `UseRefSources` | `false` | switch the whole thing on |
+| `RefMagRange` | `[14 16]` | OGLE I window the frame stars come from |
+| `RefCompanionRadius` | `5` | drop a candidate with a bright companion this close [pix]. The seeing is about 7.7 pix, so anything inside this radius is thoroughly blended |
+| `RefCompanionMaxMag` | `18` | companions fainter than this are ignored |
+| `RefCompanionCat` | `[]` | `[X Y Mag]` matrix or the path of an OGLE `.mat`. Worth supplying: the matched source list merges close pairs that OGLE resolves, and without it the cut keeps roughly twice as many stars |
+
+```matlab
+ml.scripts.runAstrometryMSc(MScFile, 'EventNum',260058, 'Field','BLG41', ...
+    'UseRefSources',true, 'RefMagRange',[14 16], 'RefCompanionRadius',5, ...
+    'RefCompanionCat','~/matlab/Lizoo/OGLEdata/OB260058/OB160058.mat');
+```
+
+On BLG41 this keeps 36 stars of 594, measured to 4.2/4.0 mas and detected in
+every epoch, against 14.0/14.8 mas and 81% for the field as a whole. On BLG01
+it keeps only 10, OGLE covering 29% of its sources, which is thin for a six
+parameter fit: `Info.RefSrc` records how many survived each criterion.
+
 **Fit** — `runIterDetrendMScArgs`
 
 | parameter | default | note |

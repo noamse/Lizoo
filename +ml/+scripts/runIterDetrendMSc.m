@@ -18,6 +18,29 @@ function [IFsys, Obj, IFsysB, Info] = runIterDetrendMSc(MS, Args)
 %            'PixPhase' - Apply the pixel-phase correction. Requires the
 %                   per-epoch shifts to have been stored by the pipeline.
 %                   Default is false.
+%            'UseRefSources' - Fit the per-epoch transformation from a clean
+%                   subset of stars rather than from every source, while still
+%                   solving the source parameters for all of them. The subset
+%                   is chosen by ml.util.selectRefSources. Default is false.
+%            'RefMagRange' - Reference magnitude window the frame stars are
+%                   taken from, on the OGLE I scale. Default is [14 16].
+%            'RefCompanionRadius' - A candidate is dropped if another star
+%                   brighter than RefCompanionMaxMag lies within this distance
+%                   [pix]. Note that the seeing is about 7.7 pix, so anything
+%                   inside this radius is thoroughly blended. Default is 5.
+%            'RefCompanionMaxMag' - Companions fainter than this are ignored.
+%                   Default is 18.
+%            'RefCompanionCat' - Catalogue searched for companions in addition
+%                   to the object's own sources, either an [X, Y, Mag] matrix
+%                   or the path of an OGLE .mat, which is read by
+%                   ml.util.ogleCompanionCat. Strongly worth supplying: the
+%                   matched source list merges close pairs that OGLE resolves.
+%                   Default is [].
+%            'selectRefSourcesArgs' - Cell array of further arguments for
+%                   ml.util.selectRefSources. Appended after the four above, so
+%                   anything given here overrides them. Default is {}.
+%            'RefSrcFlag' - A logical over the converted object's sources, used
+%                   instead of running the selection. Default is [].
 %            'NiterNoWeightsBeforeSys' - Unweighted iterations of the first
 %                   pass. Default is 2.
 %            'NiterWeightsBeforeSys' - Weighted iterations of the first pass.
@@ -61,6 +84,13 @@ function [IFsys, Obj, IFsysB, Info] = runIterDetrendMSc(MS, Args)
         Args.AnnualEffect              = true;
         Args.UseWeights                = true;
         Args.PixPhase                  = false;
+        Args.UseRefSources             = false;
+        Args.RefMagRange               = [14 16];
+        Args.RefCompanionRadius        = 5;
+        Args.RefCompanionMaxMag        = 18;
+        Args.RefCompanionCat           = [];
+        Args.selectRefSourcesArgs      = {};
+        Args.RefSrcFlag                = [];
         Args.NiterNoWeightsBeforeSys   = 2;
         Args.NiterWeightsBeforeSys     = 10;
         Args.NiterWeightsAfterSys      = 4;
@@ -86,6 +116,44 @@ function [IFsys, Obj, IFsysB, Info] = runIterDetrendMSc(MS, Args)
         CelestialCoo = Args.CelestialCoo;
     end
 
+    % --- reference sources for the per-epoch frame --------------------------
+    RefFlag = Args.RefSrcFlag;
+    Info.RefSrc = struct('Used',false);
+    if Args.UseRefSources && isempty(RefFlag)
+        RefMag = [];
+        if isstruct(Info.SrcData) && isfield(Info.SrcData,'I_ogle')
+            RefMag = Info.SrcData.I_ogle;
+        end
+        if isempty(RefMag)
+            error('runIterDetrendMSc:NoRefMag','UseRefSources needs SrcData.I_ogle to pick the reference stars');
+        end
+        CompCat = Args.RefCompanionCat;
+        if ischar(CompCat) || isstring(CompCat)
+            CompCat = ml.util.ogleCompanionCat(char(CompCat));
+        end
+        % the explicit arguments come first so that selectRefSourcesArgs, being
+        % last, can still override any of them
+        [RefFlag, Info.RefSrc] = ml.util.selectRefSources(Obj, 'RefMag',RefMag, ...
+            'MagRange',        Args.RefMagRange, ...
+            'CompanionRadius', Args.RefCompanionRadius, ...
+            'CompanionMaxMag', Args.RefCompanionMaxMag, ...
+            'CompanionCat',    CompCat, ...
+            'Verbosity',       Args.Verbosity, Args.selectRefSourcesArgs{:});
+    end
+    if ~isempty(RefFlag)
+        RefFlag = logical(RefFlag(:)).';
+        if numel(RefFlag)~=Obj.Nsrc
+            error('runIterDetrendMSc:BadRefFlag','RefSrcFlag must hold one entry per source (%d)', Obj.Nsrc);
+        end
+        if sum(RefFlag) < 10
+            error('runIterDetrendMSc:TooFewRefSources', ...
+                  'Only %d reference sources: the per-epoch transformation has 6 parameters and needs more', sum(RefFlag));
+        end
+        Info.RefSrc.Used  = true;
+        Info.RefSrc.Nused = sum(RefFlag);
+        report(Args.Verbosity, 'Fitting the per-epoch frame from %d of %d sources\n', sum(RefFlag), Obj.Nsrc);
+    end
+
     if Args.PixPhase && ~Info.PixPhaseAvailable
         error('runIterDetrendMSc:NoPixPhase', ...
               ['PixPhase was requested but the pixel phase is not recoverable: X and Y are the ', ...
@@ -103,6 +171,7 @@ function [IFsys, Obj, IFsysB, Info] = runIterDetrendMSc(MS, Args)
         'AnnualEffect',   Args.AnnualEffect, ...
         'ChromaicHighOrder', Args.ChromaicHighOrder, ...
         'NiterWeights',   Args.NiterWeightsBeforeSys, ...
+        'RefSrcFlag',     RefFlag, ...
         'NiterNoWeights', Args.NiterNoWeightsBeforeSys);
 
     % --- SysRem on the astrometric residuals --------------------------------
@@ -145,6 +214,10 @@ function [IFsys, Obj, IFsysB, Info] = runIterDetrendMSc(MS, Args)
         % first-pass solution that is being reused, so the two stay aligned.
         ObjSysAfter.Data = ml.util.flag_struct_field(ObjSysAfter.Data, FlagNan, 'FlagByCol', true);
         IFinit.ParS      = IFinit.ParS(:, FlagNan);
+        if ~isempty(RefFlag)
+            RefFlag        = RefFlag(FlagNan);
+            IFinit.RefSrcFlag = RefFlag;
+        end
         Info.SrcInd      = Info.SrcInd(FlagNan);
         if isfield(Info,'SrcData') && isstruct(Info.SrcData)
             SrcFields = fieldnames(Info.SrcData);
@@ -168,6 +241,7 @@ function [IFsys, Obj, IFsysB, Info] = runIterDetrendMSc(MS, Args)
         'AnnualEffect',   Args.AnnualEffect, ...
         'ChromaicHighOrder', Args.ChromaicHighOrder, ...
         'NiterWeights',   Args.NiterWeightsAfterSys, ...
+        'RefSrcFlag',     RefFlag, ...
         'NiterNoWeights', Args.NiterNoWeightsBeforeSys, ...
         'FinalStep',      true);
 

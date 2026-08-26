@@ -11,8 +11,23 @@ function [OutputFileName, File] = runAstrometryMSc(MS, Args)
 %            'EventNum' - Event number recorded in the output. Default is [].
 %            'Site' - Site name recorded in the output. Default is 'CTIO'.
 %            'Field' - Field name recorded in the output. Default is ''.
-%            'runIterDetrendMScArgs' - Cell array of arguments passed on to
-%                   ml.scripts.runIterDetrendMSc. Default is {}.
+%            'UseRefSources' - Fit the per-epoch transformation from a clean
+%                   subset of stars rather than from every source, while still
+%                   solving the source parameters for all of them.
+%                   Default is false.
+%            'RefMagRange' - Magnitude window those stars are taken from, on
+%                   the OGLE I scale. Default is [14 16].
+%            'RefCompanionRadius' - Drop a candidate with a companion brighter
+%                   than RefCompanionMaxMag within this distance [pix].
+%                   Default is 5.
+%            'RefCompanionMaxMag' - Companions fainter than this are ignored.
+%                   Default is 18.
+%            'RefCompanionCat' - [X, Y, Mag] matrix, or the path of an OGLE
+%                   .mat, searched for companions alongside the object's own
+%                   sources. Default is [].
+%            'runIterDetrendMScArgs' - Cell array of further arguments for
+%                   ml.scripts.runIterDetrendMSc. Appended after the reference
+%                   ones, so anything given here overrides them. Default is {}.
 %            'PerSourcesTargetPath' - Directory for the per-source csv tables.
 %                   No tables are written when empty. Default is ''.
 %            'GaiaCalib' - Run the Gaia proper-motion calibration. Requires
@@ -59,6 +74,11 @@ function [OutputFileName, File] = runAstrometryMSc(MS, Args)
         Args.EventNum                  = [];
         Args.Site                      = 'CTIO';
         Args.Field                     = '';
+        Args.UseRefSources             = false;
+        Args.RefMagRange               = [14 16];
+        Args.RefCompanionRadius        = 5;
+        Args.RefCompanionMaxMag        = 18;
+        Args.RefCompanionCat           = [];
         Args.runIterDetrendMScArgs     = {};
         Args.PerSourcesTargetPath      = '';
         Args.GaiaCalib                 = false;
@@ -90,8 +110,13 @@ function [OutputFileName, File] = runAstrometryMSc(MS, Args)
 
     % --- Step 1: convert and detrend ---------------------------------------
     [IFsys, Obj, IFsysB, Info] = ml.scripts.runIterDetrendMSc(MS, ...
-        'PerSourcesTargetPath', Args.PerSourcesTargetPath, ...
-        'Verbosity', Args.Verbosity, ...
+        'PerSourcesTargetPath',  Args.PerSourcesTargetPath, ...
+        'Verbosity',             Args.Verbosity, ...
+        'UseRefSources',         Args.UseRefSources, ...
+        'RefMagRange',           Args.RefMagRange, ...
+        'RefCompanionRadius',    Args.RefCompanionRadius, ...
+        'RefCompanionMaxMag',    Args.RefCompanionMaxMag, ...
+        'RefCompanionCat',       Args.RefCompanionCat, ...
         Args.runIterDetrendMScArgs{:});
 
     % --- Step 2: Gaia proper-motion calibration (opt-in) --------------------
