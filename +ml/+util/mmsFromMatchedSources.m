@@ -17,7 +17,9 @@ function [Obj, CelestialCoo, Info] = mmsFromMatchedSources(MS, Args)
 %                   'all'. Each field costs Nepoch*Nsrc doubles and is copied
 %                   several times downstream, so the default is the lean set
 %                   actually used by IterFit. Default is
-%                   {'X','Y','FLUX_PSF','MAGERR_PSF','PSF_CHI2DOF','SN'}.
+%                   {'X','Y','X2','Y2','FLUX_PSF','MAGERR_PSF','PSF_CHI2DOF','SN'}.
+%                   X2 and Y2 are needed to derive fwhm and DeltaPSFXY, which
+%                   ml.detrend.correctPixPhase reads.
 %            'ColNameFlux' - Flux field from which the magnitude is built.
 %                   Default is 'FLUX_PSF'.
 %            'ColNameMag' - Name of the magnitude field to create.
@@ -133,7 +135,7 @@ function [Obj, CelestialCoo, Info] = mmsFromMatchedSources(MS, Args)
         Args.RA                       = celestial.coo.convertdms('17:54:16.84','gH','d');
         Args.Dec                      = celestial.coo.convertdms('-31:08:44.3','gD','d');
         Args.GeoPos                   = [-70.80399722, -30.16717778];  % CTIO [Lon Lat] deg
-        Args.KeepFields               = {'X','Y','FLUX_PSF','MAGERR_PSF','PSF_CHI2DOF','SN'};
+        Args.KeepFields               = {'X','Y','X2','Y2','FLUX_PSF','MAGERR_PSF','PSF_CHI2DOF','SN'};
         Args.ColNameFlux              = 'FLUX_PSF';
         Args.ColNameMag               = 'MAG_PSF';
         Args.ZP0                      = 25;
@@ -344,6 +346,17 @@ function [Obj, CelestialCoo, Info] = mmsFromMatchedSources(MS, Args)
     Obj.Data.pa     = PA   * Ones;
     Obj.Data.ha     = HA   * Ones;
     Obj.Data.alt    = Alt  * Ones;
+
+    % --- shape fields that ml.detrend.correctPixPhase reads -----------------
+    % The old @ImRed pipeline wrote fwhm and DeltaPSFXY into each catalogue;
+    % KMT_pipelineI does not, so they are derived from the second moments.
+    % DeltaPSFXY only ever reaches a condition that also requires C < -9,
+    % which a centred colour never satisfies, so its value does not matter and
+    % it is supplied for the field to exist.
+    if isfield(Obj.Data,'X2') && isfield(Obj.Data,'Y2')
+        Obj.Data.fwhm       = 2.3548.*sqrt(0.5.*(Obj.Data.X2 + Obj.Data.Y2));
+        Obj.Data.DeltaPSFXY = Obj.Data.X2 - Obj.Data.Y2;
+    end
 
     % --- pixel phase, only when the pipeline stored the per-epoch shifts ----
     % X and Y are the registered (shifted) coordinates, so the detector pixel

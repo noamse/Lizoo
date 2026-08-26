@@ -21,8 +21,8 @@ M = IF.medianFieldSource({'MAG_PSF'});
 OutLiersFlagOriginal = ml.util.iterativeOutlierDetection(Rstd,M,10,'MoveMedianStep',0.5);
 Flag = Rstd < PrcTopRstd &~OutLiersFlagOriginal; 
 FlagHA = abs(DataSt.ha(:,1))<2;
-DataSt = flag_struct_field(DataSt,Flag,'FlagByCol',true);
-DataSt = flag_struct_field(DataSt,FlagHA ,'FlagByCol',false);
+DataSt = ml.util.flag_struct_field(DataSt,Flag,'FlagByCol',true);
+DataSt = ml.util.flag_struct_field(DataSt,FlagHA ,'FlagByCol',false);
 
 
 
