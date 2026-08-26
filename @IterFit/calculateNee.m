@@ -14,6 +14,12 @@ W = calculateWes(IF);
 Aex = IF.AeX;
 Aey = IF.AeY;
 W = median(W,1,'omitnan');
+% Restrict the frame to the reference sources, when one has been chosen. The
+% weight here is per source, so zeroing it keeps a source out of the epoch
+% solution while leaving its own parameters to be solved as usual.
+if ~isempty(IF.RefSrcFlag)
+    W(~IF.RefSrcFlag) = 0;
+end
 % if IF.Chromatic
 %     pa = IF.getTimeSeriesField(1,{'pa'});
 %     

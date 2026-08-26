@@ -27,6 +27,10 @@ classdef  IterFit< MMS
         ChromaicHighOrder = true;
         CBinWidth = 0.5;
         FlagSourcesPix= [];
+        RefSrcFlag    = [];   % logical over sources: those defining the per-epoch frame.
+                              % Empty means every source, which is the original behaviour.
+                              % Only the epoch (affine) solve is restricted; the source
+                              % parameters are still solved for all sources.
         minUncerntainty = 2/400;
         InitialXYGuess=[]; 
         ContaminatingFlux=[];

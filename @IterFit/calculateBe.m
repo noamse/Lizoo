@@ -15,6 +15,10 @@ Ry(isnan(Ry))= 0;
 %Ws = calculateWs(IF);
 Ws= calculateWes(IF);
 Ws = median(Ws,1,'omitnan');
+% Restrict the frame to the reference sources, see calculateNee
+if ~isempty(IF.RefSrcFlag)
+    Ws(~IF.RefSrcFlag) = 0;
+end
 % if IF.Chromatic
 %     Be = [];
 %     pa = IF.getTimeSeriesField(1,{'pa'});

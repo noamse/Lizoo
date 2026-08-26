@@ -21,6 +21,7 @@ arguments
     Args.InitialXYGuess=[];
     Args.ContaminatingFlux = [];
     Args.FinalStep = false;
+    Args.RefSrcFlag = [];   % logical over sources: those defining the per-epoch frame
 end
 
 
@@ -28,7 +29,8 @@ end
 if isempty(Args.IF)
     
     IF = IterFit(Obj.copy(),'CelestialCoo',Args.CelestialCoo,'Plx',false,'Chromatic',Args.Chromatic,'ChromaicHighOrder',Args.ChromaicHighOrder,...
-        'HALat',Args.HALat,'AnnualEffect',Args.AnnualEffect,'AffineNoOnes',false,'InitialXYGuess',Args.InitialXYGuess,'ContaminatingFlux',Args.ContaminatingFlux);
+        'HALat',Args.HALat,'AnnualEffect',Args.AnnualEffect,'AffineNoOnes',false,'InitialXYGuess',Args.InitialXYGuess,'ContaminatingFlux',Args.ContaminatingFlux,...
+        'RefSrcFlag',Args.RefSrcFlag);
     %IF = IterFit(ObjChrom.copy());
     %IF.Plx = Args.Plx; IF.Chromatic =Args.Chromatic;  %IF.HALat=Args.HALat; IF.ChromaicHighOrder = Args.ChromaicHighOrder;
     %IF.CelestialCoo = Args.CelestialCoo;
@@ -44,6 +46,9 @@ else
     % update the data from Obj.Data
     IF=Args.IF;
     IF.Data = Obj.Data;
+    if ~isempty(Args.RefSrcFlag)
+        IF.RefSrcFlag = Args.RefSrcFlag;
+    end
 end
 IF.UseWeights = Args.UseWeights;
 
