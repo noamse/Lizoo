@@ -32,6 +32,19 @@ function [Pos, Info] = registerGroupFits(IFs, Args)
 %                   are kept out. Default is 3.
 %            'MinRegisterN' - Fewest shared stars a group needs to be
 %                   registered. Default is 20.
+%            'PMIter' - Rounds of proper-motion aware registration. The plain
+%                   tie assumes the registration stars are fixed, which they
+%                   are not: on these fields their motion disperses by about
+%                   3 mas/yr, so tying a season to one a decade away leaves a
+%                   residual growing at roughly 1.6 mas/yr. With PMIter above
+%                   zero a proper motion is fitted for every star from the
+%                   registered positions, the reference positions are carried
+%                   back to each group's own epoch before the tie is fitted,
+%                   and the whole thing is repeated. Zero reproduces the plain
+%                   tie. Default is 0.
+%            'PMMinGroups' - Fewest groups a star must appear in to be given a
+%                   proper motion. Stars with fewer keep zero and so are tied
+%                   as before. Default is 6.
 %            'Order' - 'shift', 'affine' or 'quadratic'. Default is 'affine'.
 %            'Niter' - Rejection iterations on the registration fit.
 %                   Default is 3.
@@ -60,6 +73,8 @@ function [Pos, Info] = registerGroupFits(IFs, Args)
         Args.ExcludeXY       = [150 150];
         Args.ExcludeRadius   = 3;
         Args.MinRegisterN    = 20;
+        Args.PMIter          = 0;
+        Args.PMMinGroups     = 6;
         Args.Order           = 'affine';
         Args.Niter           = 3;
         Args.SigmaClip       = 3;
@@ -133,37 +148,89 @@ function [Pos, Info] = registerGroupFits(IFs, Args)
     end
 
     % --- register each group onto the reference ---------------------------
-    Xr = nan(Ncommon, Ngroup); Yr = Xr;
-    Par = cell(1,Ngroup); Nused = zeros(1,Ngroup); Resid = nan(1,Ngroup);
+    % The tie is fitted against the reference positions carried back to each
+    % group's own epoch, so that the stars' own motion is not mistaken for a
+    % difference between the frames. With PMIter zero the motion is taken as
+    % nil and this reduces to the plain tie.
+    Tyr  = (MeanJD - MeanJD(Iref))./365.25;      % years from the reference group
+    PMx  = zeros(Ncommon,1); PMy = zeros(Ncommon,1);
+    Xr   = nan(Ncommon, Ngroup); Yr = Xr;
+    Par  = cell(1,Ngroup); Nused = zeros(1,Ngroup); Resid = nan(1,Ngroup);
+    ResidTrack = nan(Args.PMIter+1, Ngroup);
+
+    for Round = 0:Args.PMIter
+        for K = 1:Ngroup
+            if K == Iref
+                Xr(:,K) = X(:,K); Yr(:,K) = Y(:,K);
+                Par{K} = 'reference'; Nused(K) = sum(CanUse(:,K)); Resid(K) = 0;
+                continue
+            end
+            Sel = CanUse(:,K) & CanUse(:,Iref);
+            if sum(Sel) < Args.MinRegisterN
+                if Round==0
+                    report(Args.Verbosity, 'group %d: only %d shared stars, not registered\n', K, sum(Sel));
+                end
+                continue
+            end
+            % reference positions as they would have been at this group's epoch
+            TgtX = X(:,Iref) - PMx.*Tyr(Iref) + PMx.*Tyr(K);
+            TgtY = Y(:,Iref) - PMy.*Tyr(Iref) + PMy.*Tyr(K);
+            [Px, Py, Keep, Rms] = fitRegistration(X(:,K), Y(:,K), TgtX, TgtY, Sel, ...
+                                                  Args.Order, Args.Niter, Args.SigmaClip);
+            H = designMat(X(:,K), Y(:,K), Args.Order);
+            Xr(:,K) = H*Px;  Yr(:,K) = H*Py;
+            Par{K} = [Px, Py]; Nused(K) = sum(Keep); Resid(K) = Rms;
+        end
+        ResidTrack(Round+1,:) = 400.*Resid;
+        report(Args.Verbosity, 'round %d: median tie residual %.2f mas, worst %.2f mas\n', Round, ...
+               median(400.*Resid(Resid>0),'omitnan'), max(400.*Resid,[],'omitnan'));
+        if Round < Args.PMIter
+            [PMx, PMy] = fitProperMotions(Xr, Yr, Tyr, Args.PMMinGroups);
+            report(Args.Verbosity, '   fitted proper motions for %d stars, dispersion %.2f/%.2f mas/yr\n', ...
+                   sum(isfinite(PMx) & PMx~=0), 400.*tools.math.stat.rstd(PMx(PMx~=0)), ...
+                   400.*tools.math.stat.rstd(PMy(PMy~=0)));
+        end
+    end
     for K = 1:Ngroup
-        if K == Iref
-            Xr(:,K) = X(:,K); Yr(:,K) = Y(:,K);
-            Par{K} = 'reference'; Nused(K) = sum(CanUse(:,K)); Resid(K) = 0;
-            continue
+        if isfinite(Resid(K))
+            report(Args.Verbosity, 'group %d: registered on %d stars, residual %.3f pix (%.1f mas)\n', ...
+                   K, Nused(K), Resid(K), 400*Resid(K));
         end
-        Sel = CanUse(:,K) & CanUse(:,Iref);
-        if sum(Sel) < Args.MinRegisterN
-            report(Args.Verbosity, 'group %d: only %d shared stars, not registered\n', K, sum(Sel));
-            continue
-        end
-        [Px, Py, Keep, Rms] = fitRegistration(X(:,K), Y(:,K), X(:,Iref), Y(:,Iref), Sel, ...
-                                              Args.Order, Args.Niter, Args.SigmaClip);
-        H = designMat(X(:,K), Y(:,K), Args.Order);
-        Xr(:,K) = H*Px;  Yr(:,K) = H*Py;
-        Par{K} = [Px, Py]; Nused(K) = sum(Keep); Resid(K) = Rms;
-        report(Args.Verbosity, 'group %d: registered on %d stars, residual %.3f pix (%.1f mas)\n', ...
-               K, sum(Keep), Rms, 400*Rms);
     end
 
     Pos = struct('X',Xr, 'Y',Yr, 'XRaw',X, 'YRaw',Y, 'Mag',Mag, 'Rstd',Rstd, ...
                  'MeanJD',MeanJD, 'SrcInd',AllInd, 'Measured',isfinite(X));
     Info = struct('RefGroup',Iref, 'Par',{Par}, 'Nused',Nused, 'ResidPix',Resid, ...
                   'ResidMas',400.*Resid, 'Order',Args.Order, 'Ncommon',Ncommon, ...
-                  'NExcluded',sum(Excluded), 'MaxRegisterMag',Args.MaxRegisterMag);
+                  'NExcluded',sum(Excluded), 'MaxRegisterMag',Args.MaxRegisterMag, ...
+                  'PMIter',Args.PMIter, 'PMx',400.*PMx, 'PMy',400.*PMy, ...
+                  'ResidTrackMas',ResidTrack, 'YearsFromRef',Tyr);
 end
 
 
 % -------------------------------------------------------------------------
+function [PMx, PMy] = fitProperMotions(Xr, Yr, Tyr, MinGroups)
+    % Straight line in time through each star's registered positions.
+    % Only the part not shared by the field survives: an affine tie has already
+    % absorbed any motion common to the registration stars, so these are
+    % relative motions and cannot be read as absolute proper motions.
+    Ncommon = size(Xr,1);
+    PMx = zeros(Ncommon,1); PMy = zeros(Ncommon,1);
+    T   = Tyr(:);
+    for Isrc = 1:Ncommon
+        Ok = isfinite(Xr(Isrc,:)).' & isfinite(Yr(Isrc,:)).';
+        if sum(Ok) < MinGroups
+            continue
+        end
+        H  = [ones(sum(Ok),1), T(Ok)];
+        Bx = H\Xr(Isrc,Ok).';
+        By = H\Yr(Isrc,Ok).';
+        PMx(Isrc) = Bx(2);
+        PMy(Isrc) = By(2);
+    end
+end
+
+
 function H = designMat(X, Y, Order)
     % Design matrix of the requested transformation
     One = ones(size(X));
