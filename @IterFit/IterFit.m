@@ -31,6 +31,15 @@ classdef  IterFit< MMS
                               % Empty means every source, which is the original behaviour.
                               % Only the epoch (affine) solve is restricted; the source
                               % parameters are still solved for all sources.
+        ParSFixed     = [];   % same size as ParS: a finite entry holds that source
+                              % parameter at that value, a NaN leaves it free. Empty
+                              % holds nothing, which is the original behaviour.
+                              % Rows 3:4 carry a proper motion taken from a longer
+                              % fit, which one observing season cannot constrain for
+                              % itself. A held parameter is dropped from the source
+                              % normal equations, so the free ones solve the properly
+                              % constrained system instead of being taken from the
+                              % unconstrained one and then overwritten.
         minUncerntainty = 2/400;
         InitialXYGuess=[]; 
         ContaminatingFlux=[];

@@ -9,7 +9,16 @@ Rx(isnan(Rx))= 0;
 Ry(isnan(Ry))= 0;
 Wes = calculateWes(IF);
 
-Bs = reshape(Ax'*(Rx.*Wes) + Ay'*(Ry.*Wes) ,[],1);
+Bmat = Ax'*(Rx.*Wes) + Ay'*(Ry.*Wes);
+
+% Clear the right hand side of every held parameter, to go with the row and
+% column calculateNss clears in the normal matrix. Together they make the
+% increment of a held parameter exactly zero.
+if ~isempty(IF.ParSFixed)
+    Bmat(isfinite(IF.ParSFixed)) = 0;
+end
+
+Bs = reshape(Bmat ,[],1);
 
 
 

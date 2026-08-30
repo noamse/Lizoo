@@ -30,4 +30,16 @@ else
 end
 ParS([1,2],:)= [Xguess';Yguess'];
 
+% Parameters that are held rather than fitted start at the value they are held
+% at, since the solver will never move them off it.
+if ~isempty(IF.ParSFixed)
+    if ~isequal(size(IF.ParSFixed),size(ParS))
+        error('IterFit:initiateParS:BadParSFixed', ...
+              'ParSFixed is %dx%d but ParS is %dx%d', ...
+              size(IF.ParSFixed,1), size(IF.ParSFixed,2), size(ParS,1), size(ParS,2));
+    end
+    Held = isfinite(IF.ParSFixed);
+    ParS(Held) = IF.ParSFixed(Held);
+end
+
 end
