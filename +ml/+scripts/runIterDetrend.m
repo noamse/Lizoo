@@ -22,6 +22,7 @@ arguments
     Args.ContaminatingFlux = [];
     Args.FinalStep = false;
     Args.RefSrcFlag = [];   % logical over sources: those defining the per-epoch frame
+    Args.ParSFixed = [];    % same size as ParS: finite entries are held, NaN are fitted
 end
 
 
@@ -30,7 +31,7 @@ if isempty(Args.IF)
     
     IF = IterFit(Obj.copy(),'CelestialCoo',Args.CelestialCoo,'Plx',false,'Chromatic',Args.Chromatic,'ChromaicHighOrder',Args.ChromaicHighOrder,...
         'HALat',Args.HALat,'AnnualEffect',Args.AnnualEffect,'AffineNoOnes',false,'InitialXYGuess',Args.InitialXYGuess,'ContaminatingFlux',Args.ContaminatingFlux,...
-        'RefSrcFlag',Args.RefSrcFlag);
+        'RefSrcFlag',Args.RefSrcFlag,'ParSFixed',Args.ParSFixed);
     %IF = IterFit(ObjChrom.copy());
     %IF.Plx = Args.Plx; IF.Chromatic =Args.Chromatic;  %IF.HALat=Args.HALat; IF.ChromaicHighOrder = Args.ChromaicHighOrder;
     %IF.CelestialCoo = Args.CelestialCoo;
@@ -48,6 +49,9 @@ else
     IF.Data = Obj.Data;
     if ~isempty(Args.RefSrcFlag)
         IF.RefSrcFlag = Args.RefSrcFlag;
+    end
+    if ~isempty(Args.ParSFixed)
+        IF.ParSFixed = Args.ParSFixed;
     end
 end
 IF.UseWeights = Args.UseWeights;

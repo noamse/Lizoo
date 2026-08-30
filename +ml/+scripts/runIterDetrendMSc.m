@@ -41,6 +41,18 @@ function [IFsys, Obj, IFsysB, Info] = runIterDetrendMSc(MS, Args)
 %                   anything given here overrides them. Default is {}.
 %            'RefSrcFlag' - A logical over the converted object's sources, used
 %                   instead of running the selection. Default is [].
+%            'FixedPM' - Proper motions to hold fixed instead of fitting, as a
+%                   2 by Nsrc matrix in pixels per year over the sources of
+%                   the input object, NaN for a source whose motion is not
+%                   known, or the path of a .mat holding a longer fit for
+%                   ml.util.fixedPMFromFit to take them from. A fit spanning
+%                   one observing season cannot constrain a motion for itself
+%                   and its free slope absorbs any real motion of the source,
+%                   so on a short run this should be supplied. Sources without
+%                   a motion keep a fitted one. Default is [], everything
+%                   fitted.
+%            'fixedPMFromFitArgs' - Cell array for ml.util.fixedPMFromFit, used
+%                   only when FixedPM is a path. Default is {}.
 %            'NiterNoWeightsBeforeSys' - Unweighted iterations of the first
 %                   pass. Default is 2.
 %            'NiterWeightsBeforeSys' - Weighted iterations of the first pass.
@@ -91,6 +103,8 @@ function [IFsys, Obj, IFsysB, Info] = runIterDetrendMSc(MS, Args)
         Args.RefCompanionCat           = [];
         Args.selectRefSourcesArgs      = {};
         Args.RefSrcFlag                = [];
+        Args.FixedPM                   = [];
+        Args.fixedPMFromFitArgs        = {};
         Args.NiterNoWeightsBeforeSys   = 2;
         Args.NiterWeightsBeforeSys     = 10;
         Args.NiterWeightsAfterSys      = 4;
@@ -154,6 +168,38 @@ function [IFsys, Obj, IFsysB, Info] = runIterDetrendMSc(MS, Args)
         report(Args.Verbosity, 'Fitting the per-epoch frame from %d of %d sources\n', sum(RefFlag), Obj.Nsrc);
     end
 
+    % --- proper motions taken from a longer fit -----------------------------
+    % ParS rows 3:4 are the motion. Held there, they are applied through the
+    % source design matrix exactly as a fitted motion would be, but the solver
+    % never moves them. Sources the longer fit did not reach keep a NaN and so
+    % keep a fitted motion, which leaves the run a mixture of the two models.
+    Info.FixedPM = struct('Used',false, 'Nheld',0, 'Nfree',Obj.Nsrc, 'Source','');
+    ParSFixed    = [];
+    if ~isempty(Args.FixedPM)
+        PMin = Args.FixedPM;
+        if ischar(PMin) || isstring(PMin)
+            Info.FixedPM.Source = char(PMin);
+            [PMin, Info.FixedPM.Extraction] = ml.util.fixedPMFromFit(char(PMin), [], ...
+                'Verbosity', Args.Verbosity, Args.fixedPMFromFitArgs{:});
+        end
+        if size(PMin,1)~=2
+            error('runIterDetrendMSc:BadFixedPM', ...
+                  'FixedPM must hold two rows, muX and muY, not %d', size(PMin,1));
+        end
+        % Info.SrcInd says which source of the input object each surviving
+        % source is, which is the indexing FixedPM is given in.
+        PMsub = nan(2, Obj.Nsrc);
+        Ok    = Info.SrcInd(:).' >= 1 & Info.SrcInd(:).' <= size(PMin,2);
+        PMsub(:,Ok) = PMin(:, Info.SrcInd(Ok));
+        ParSFixed         = nan(4, Obj.Nsrc);   % Plx is off below, so ParS has 4 rows
+        ParSFixed(3:4,:)  = PMsub;
+        Info.FixedPM.Used  = true;
+        Info.FixedPM.Nheld = sum(all(isfinite(PMsub),1));
+        Info.FixedPM.Nfree = Obj.Nsrc - Info.FixedPM.Nheld;
+        report(Args.Verbosity, 'Holding the proper motion of %d of %d sources, %d keep a fitted one\n', ...
+               Info.FixedPM.Nheld, Obj.Nsrc, Info.FixedPM.Nfree);
+    end
+
     if Args.PixPhase && ~Info.PixPhaseAvailable
         error('runIterDetrendMSc:NoPixPhase', ...
               ['PixPhase was requested but the pixel phase is not recoverable: X and Y are the ', ...
@@ -172,6 +218,7 @@ function [IFsys, Obj, IFsysB, Info] = runIterDetrendMSc(MS, Args)
         'ChromaicHighOrder', Args.ChromaicHighOrder, ...
         'NiterWeights',   Args.NiterWeightsBeforeSys, ...
         'RefSrcFlag',     RefFlag, ...
+        'ParSFixed',      ParSFixed, ...
         'NiterNoWeights', Args.NiterNoWeightsBeforeSys);
 
     % --- SysRem on the astrometric residuals --------------------------------
@@ -218,6 +265,10 @@ function [IFsys, Obj, IFsysB, Info] = runIterDetrendMSc(MS, Args)
             RefFlag        = RefFlag(FlagNan);
             IFinit.RefSrcFlag = RefFlag;
         end
+        if ~isempty(ParSFixed)
+            ParSFixed         = ParSFixed(:,FlagNan);
+            IFinit.ParSFixed  = ParSFixed;
+        end
         Info.SrcInd      = Info.SrcInd(FlagNan);
         if isfield(Info,'SrcData') && isstruct(Info.SrcData)
             SrcFields = fieldnames(Info.SrcData);
@@ -242,6 +293,7 @@ function [IFsys, Obj, IFsysB, Info] = runIterDetrendMSc(MS, Args)
         'ChromaicHighOrder', Args.ChromaicHighOrder, ...
         'NiterWeights',   Args.NiterWeightsAfterSys, ...
         'RefSrcFlag',     RefFlag, ...
+        'ParSFixed',      ParSFixed, ...
         'NiterNoWeights', Args.NiterNoWeightsBeforeSys, ...
         'FinalStep',      true);
 
