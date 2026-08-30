@@ -29,7 +29,16 @@ function [Obj, CelestialCoo, Info] = mmsFromMatchedSources(MS, Args)
 %            'MaxSecz' - Epochs with secz above this value are removed.
 %                   Set to Inf to disable. Default is 1.6.
 %            'MinNdetSrc' - Sources detected in fewer epochs than this are
-%                   removed. Default is 200.
+%                   removed. An absolute floor, meant for full length runs; on
+%                   a short block it can exceed the number of epochs, which
+%                   would demand a detection in nearly every epoch, so it is
+%                   capped at MaxNdetFloorFrac of them and the capping is
+%                   reported. Default is 200.
+%            'MaxNdetFloorFrac' - The MinNdetSrc floor may not demand more
+%                   than this fraction of the epochs. Without it a block of,
+%                   say, 202 epochs would require 200 detections, i.e. 99%,
+%                   and would throw away every source that is ever missed.
+%                   Default is 0.5.
 %            'MinDetFrac' - Sources detected in a smaller fraction of the
 %                   surviving epochs than this are removed. Acts together with
 %                   MinNdetSrc, whichever is stricter, so that the cut follows
@@ -142,6 +151,7 @@ function [Obj, CelestialCoo, Info] = mmsFromMatchedSources(MS, Args)
         Args.MaxSecz                  = 1.6;
         Args.MinNdetSrc               = 200;
         Args.MinDetFrac               = 0.3;
+        Args.MaxNdetFloorFrac         = 0.5;
         Args.MaxSrcStdXY              = 1;
         Args.MinNsrcEpoch             = 50;
         Args.RemoveDuplicateSrc       = true;
@@ -276,6 +286,16 @@ function [Obj, CelestialCoo, Info] = mmsFromMatchedSources(MS, Args)
     % --- source selection ---------------------------------------------------
     Ndet     = sum(~isnan(Obj.Data.X), 1);
     MinNdet  = max(Args.MinNdetSrc, ceil(Args.MinDetFrac.*Obj.Nepoch));
+    Info.MinNdetCapped = false;
+    FloorCap = ceil(Args.MaxNdetFloorFrac.*Obj.Nepoch);
+    if Args.MinNdetSrc > FloorCap
+        % on a short block the absolute floor would demand a detection in
+        % nearly every epoch, throwing away every source that is ever missed
+        MinNdet = max(FloorCap, ceil(Args.MinDetFrac.*Obj.Nepoch));
+        Info.MinNdetCapped = true;
+        report(Args.Verbosity, ['MinNdetSrc %d would demand %.0f%% of the %d epochs here; capped to ', ...
+               '%d\n'], Args.MinNdetSrc, 100.*Args.MinNdetSrc./Obj.Nepoch, Obj.Nepoch, MinNdet);
+    end
     FlagSrc  = Ndet >= MinNdet;
     Info.MinNdetUsed      = MinNdet;
     Info.NsrcRejectedNdet = sum(~FlagSrc);
@@ -325,7 +345,14 @@ function [Obj, CelestialCoo, Info] = mmsFromMatchedSources(MS, Args)
     EpochMap = EpochMap(FlagEp2);
 
     if Obj.Nepoch < 2 || Obj.Nsrc < 2
-        error('mmsFromMatchedSources:EmptySelection','No data left after the epoch/source cuts (Nepoch=%d, Nsrc=%d)', Obj.Nepoch, Obj.Nsrc);
+        error('mmsFromMatchedSources:EmptySelection', ...
+              ['No data left after the cuts (Nepoch=%d, Nsrc=%d). Started from %d epochs and %d ', ...
+               'sources; epochs lost: %d to secz/duplicate JD, %d to the pipeline flags, %d to the ', ...
+               'source-count floor. Sources lost: %d to Ndet<%d, %d to the scatter cut, %d as ', ...
+               'duplicates, %d to the pipeline flags.'], ...
+              Obj.Nepoch, Obj.Nsrc, Nepoch0, Nsrc0, Info.NepochRejectedSecz, ...
+              Info.NepochRejectedPipeline, Info.NepochRejectedNsrc, Info.NsrcRejectedNdet, ...
+              MinNdet, Info.NsrcRejectedStd, Info.NsrcRejectedDuplicate, Info.NsrcRejectedPipeline);
     end
 
     Info.EpochInd = EpochMap;
