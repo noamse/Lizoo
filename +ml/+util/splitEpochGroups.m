@@ -24,7 +24,7 @@ function [GroupId, Info] = splitEpochGroups(JD, Args)
 %            count, night count, first and last JD, span and mean JD, plus a
 %            record of the groups that were dropped and why.
 % Author : ULTRASAT team (Aug 2026)
-% Example: [G,Info] = ml.util.splitEpochGroups(IFsys.JD, 'Verbosity',1);
+% Example: [G,Info] = ml.util.splitEpochGroups(IFsys.JD);
 %          % KMT-2026-BLG-0058 gives 10 usable groups: 2016-2019, 2021-2026,
 %          % 2020 being dropped as a 110 epoch stub cut short in March.
 
