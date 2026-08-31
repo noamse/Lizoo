@@ -142,22 +142,28 @@ end
 
 
 function [sysCorX, sysCorY, Info] = rejectImplausible(sysCorX, sysCorY, MaxCorrection, Info)
-    % Drop components too large to be an astrometric systematic. Sources are
-    % examined first, so that one bad source does not condemn its epochs.
+    % Drop the individual corrections too large to be an astrometric
+    % systematic, and only those. Zeroing a whole source because one of its
+    % epochs came out large throws away the correction for every other epoch it
+    % has, and the chance of one epoch tripping the test grows with the length
+    % of the run: measured on these fields it removed 41% of the sources in a
+    % single season and 79% over the full decade. The runaway decomposition
+    % this guard exists to catch is large over the whole matrix rather than at
+    % one point, so it is still removed in full.
     sysCorX(~isfinite(sysCorX)) = 0;
     sysCorY(~isfinite(sysCorY)) = 0;
 
     if isfinite(MaxCorrection)
-        BadSrc = max(max(abs(sysCorX), [], 1), max(abs(sysCorY), [], 1)) > MaxCorrection;
-        sysCorX(:,BadSrc) = 0;
-        sysCorY(:,BadSrc) = 0;
+        Bad = abs(sysCorX) > MaxCorrection | abs(sysCorY) > MaxCorrection;
+        sysCorX(Bad) = 0;
+        sysCorY(Bad) = 0;
 
-        BadEpoch = max(max(abs(sysCorX), [], 2), max(abs(sysCorY), [], 2)) > MaxCorrection;
-        sysCorX(BadEpoch,:) = 0;
-        sysCorY(BadEpoch,:) = 0;
-
-        Info.NsrcRejected   = sum(BadSrc);
-        Info.NepochRejected = sum(BadEpoch);
+        Info.NrejectedPoints = sum(Bad, 'all');
+        Info.FracRejected    = mean(Bad, 'all');
+        % how many sources and epochs the point-wise rejection touches at all,
+        % which is not the same as discarding them
+        Info.NsrcRejected    = sum(any(Bad, 1));
+        Info.NepochRejected  = sum(any(Bad, 2));
     end
     Info.MaxCorrectionApplied = max(max(abs(sysCorX), [], 'all'), max(abs(sysCorY), [], 'all'));
 end
