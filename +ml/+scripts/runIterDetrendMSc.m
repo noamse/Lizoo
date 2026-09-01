@@ -74,6 +74,18 @@ function [IFsys, Obj, IFsysB, Info] = runIterDetrendMSc(MS, Args)
 %                   behave, and the step is rejected rather than applied.
 %                   Default is 1.
 %            'NIterSysRem' - Number of SysRem iterations. Default is 2.
+%            'SysRemCorrection' - A correction computed elsewhere, to be applied
+%                   instead of fitting one here, as a struct holding SysCorX,
+%                   SysCorY, JD and SrcInd, or the path of a .mat holding them.
+%                   A fit spanning one season otherwise finds its own
+%                   components, and since each season finds different ones the
+%                   part of a faint source's position they absorb differs from
+%                   season to season and is left in the season-to-season track.
+%                   Computing the correction once over the whole run and
+%                   reusing it removes that by construction. The rows are found
+%                   again by matching JD and the source index of the input
+%                   object, so any subset of epochs may be passed. Default is
+%                   [], fit it here.
 %            'PerSourcesTargetPath' - Directory for the per-source csv tables
 %                   written by ml.scripts.IterFitToPerSourceFormat. No tables
 %                   are written when empty. Default is ''.
@@ -110,6 +122,7 @@ function [IFsys, Obj, IFsysB, Info] = runIterDetrendMSc(MS, Args)
         Args.NiterWeightsAfterSys      = 4;
         Args.ChromaicHighOrder         = true;
         Args.RunSysRem                 = true;
+        Args.SysRemCorrection          = [];
         Args.MaxSysRemShift            = 1;
         Args.NIterSysRem               = 2;
         Args.PerSourcesTargetPath      = '';
@@ -230,7 +243,30 @@ function [IFsys, Obj, IFsysB, Info] = runIterDetrendMSc(MS, Args)
     Info.SysRemApplied      = false;
     Info.SysRemRejectReason = '';
     ObjSysAfter             = MMSsysB;
-    if Args.RunSysRem
+    if ~isempty(Args.SysRemCorrection)
+        % A correction computed over a longer run, applied rather than refitted
+        Pre = Args.SysRemCorrection;
+        if ischar(Pre) || isstring(Pre)
+            Pre = load(char(Pre));
+        end
+        [SysCorX, SysCorY, NmatchEp, NmatchSrc] = mapCorrection(Pre, MMSsysB, Info.SrcInd);
+        ObjCandidate = MMSsysB.copy();
+        ObjCandidate.Data.X = ObjCandidate.Data.X - SysCorX;
+        ObjCandidate.Data.Y = ObjCandidate.Data.Y - SysCorY;
+        Info.SysRemRejectReason = checkSysRem(MMSsysB, ObjCandidate, SysCorX, SysCorY, Args.MaxSysRemShift);
+        if isempty(Info.SysRemRejectReason)
+            ObjSysAfter        = ObjCandidate;
+            Info.SysCorX       = SysCorX;
+            Info.SysCorY       = SysCorY;
+            Info.SysRemApplied = true;
+            Info.SysRemSource  = 'precomputed';
+            report(Args.Verbosity, ['Applied a precomputed SysRem correction: %d of %d epochs and ', ...
+                   '%d of %d sources matched\n'], NmatchEp, MMSsysB.Nepoch, NmatchSrc, MMSsysB.Nsrc);
+        else
+            fprintf('Precomputed SysRem correction rejected: %s\n', Info.SysRemRejectReason);
+        end
+    elseif Args.RunSysRem
+        Info.SysRemSource = 'fitted';
         report(Args.Verbosity, 'SysRem (%d iterations)\n', Args.NIterSysRem);
         try
             [ObjCandidate, SysCorX, SysCorY] = ml.util.sysRemScriptPart(IFsysB, MMSsysB, ...
@@ -307,6 +343,33 @@ function [IFsys, Obj, IFsysB, Info] = runIterDetrendMSc(MS, Args)
             fprintf('Failed to write the per-source tables: %s\n', ME.message);
         end
     end
+end
+
+
+function [CorX, CorY, NmatchEp, NmatchSrc] = mapCorrection(Pre, Obj, SrcInd)
+    % Place a correction computed over a longer run onto this object's epochs
+    % and sources. Rows are matched on JD and columns on the source index of
+    % the input object, so a subset of either may be passed. Anything that does
+    % not match is left uncorrected rather than guessed at.
+    for Fn = {'SysCorX','SysCorY','JD','SrcInd'}
+        if ~isfield(Pre, Fn{1})
+            error('runIterDetrendMSc:BadSysRemCorrection', ...
+                  'The correction holds no field %s', Fn{1});
+        end
+    end
+    CorX = zeros(Obj.Nepoch, Obj.Nsrc);
+    CorY = zeros(Obj.Nepoch, Obj.Nsrc);
+    [TfEp,  LocEp]  = ismember(Obj.JD(:), Pre.JD(:));
+    [TfSrc, LocSrc] = ismember(SrcInd(:), Pre.SrcInd(:));
+    NmatchEp  = sum(TfEp);
+    NmatchSrc = sum(TfSrc);
+    if NmatchEp==0 || NmatchSrc==0
+        return
+    end
+    CorX(TfEp, TfSrc) = Pre.SysCorX(LocEp(TfEp), LocSrc(TfSrc));
+    CorY(TfEp, TfSrc) = Pre.SysCorY(LocEp(TfEp), LocSrc(TfSrc));
+    CorX(~isfinite(CorX)) = 0;
+    CorY(~isfinite(CorY)) = 0;
 end
 
 
