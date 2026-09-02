@@ -71,7 +71,36 @@ function [Obj, CelestialCoo, Info] = mmsFromMatchedSources(MS, Args)
 %                   cross-correlation peak, as recorded in UserData, is below
 %                   this value. No cut when empty. Default is [].
 %            'ApplyRefZP' - Fit and apply a per-epoch zero point against the
-%                   reference magnitude. Default is true.
+%                   reference magnitude, which ties the photometry to an
+%                   external catalogue. Default is true.
+%                   Astrometrically the anchor is not needed:
+%                   SysRemPhotometry already removes the per-epoch common
+%                   mode, and measured on the 2026 season of both fields
+%                   against the same sources selected by I_ogle, dropping it
+%                   changes the residual scatter of the sources brighter than
+%                   I=17 by 0.012 mas on BLG41 and improves it on BLG01, with
+%                   only the 18-19 bin losing about 1%. It is kept on because
+%                   without it the magnitudes are instrumental and sit about
+%                   2.9 mag brighter, so every absolute magnitude threshold
+%                   downstream, MaxRegisterMag in ml.util.registerGroupFits
+%                   among them, would silently select a different population.
+%            'RefZPMode' - How the reference magnitude is used, when ApplyRefZP
+%                   is on.
+%                   'perepoch' - fit a zero point for every epoch, the
+%                                original behaviour.
+%                   'global'   - fit the same zero point for every epoch, as
+%                                the median over epochs of the per-epoch fit.
+%                   Default is 'perepoch'.
+%                   A per-epoch anchor lets the external catalogue act on each
+%                   epoch separately, which is the only way it could put an
+%                   epoch-correlated signal into the photometry and from there
+%                   into the weights. A single constant cannot: it only
+%                   relabels the magnitude scale. SysRemPhotometry removes the
+%                   per-epoch common mode in either case, and measured on the
+%                   2026 season of both fields the anchor makes no astrometric
+%                   difference at all, so 'global' gives up nothing and keeps
+%                   the magnitudes on the reference scale, which every
+%                   absolute magnitude threshold downstream depends on.
 %            'RefMagField' - SrcData field holding the reference magnitude
 %                   used to anchor the zero point. Default is 'I_ogle'.
 %            'fitRefZPArgs' - Cell array of arguments passed to MMS/fitRefZP.
@@ -159,6 +188,7 @@ function [Obj, CelestialCoo, Info] = mmsFromMatchedSources(MS, Args)
         Args.ApplyPipelineFlags       = true;
         Args.MinNormPeakCorr          = [];
         Args.ApplyRefZP               = true;
+        Args.RefZPMode                = 'perepoch';
         Args.RefMagField              = 'I_ogle';
         Args.fitRefZPArgs             = {'ZPFun',@median,'ZPFunArgs',{'omitnan'}};
         Args.ApplySysRemPhot          = true;
@@ -545,10 +575,22 @@ function [Obj, Phot] = buildMagnitudes(Obj, SrcData, Args)
         Obj.Data.RefMag = ones(Obj.Nepoch,1) * RefMag;
         try
             ZP = Obj.fitRefZP('ColNameMag', Args.ColNameMag, 'ColNameRefMag', 'RefMag', Args.fitRefZPArgs{:});
+            switch lower(Args.RefZPMode)
+                case 'perepoch'
+                    % nothing to do, the fit is already per epoch
+                case 'global'
+                    % one constant for the whole run: the external catalogue
+                    % then sets the scale but never acts on a single epoch
+                    ZP = repmat(median(ZP(:), 'omitnan'), size(ZP));
+                otherwise
+                    error('ml:util:mmsFromMatchedSources:BadRefZPMode', ...
+                          'RefZPMode must be perepoch or global, not %s', Args.RefZPMode);
+            end
             Obj.applyZP(ZP, 'ApplyToMagField', Args.ColNameMag);
             Obj.ZP = ZP;
             Obj.Data = rmfield(Obj.Data, 'RefMag');
             Phot.RefZPApplied     = true;
+            Phot.RefZPMode        = lower(Args.RefZPMode);
             Phot.InstrumentalOnly = false;
             report(Args.Verbosity, 'Applied per-epoch zero point anchored on %s\n', Args.RefMagField);
         catch ME
