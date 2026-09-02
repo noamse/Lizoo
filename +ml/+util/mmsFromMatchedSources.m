@@ -111,7 +111,11 @@ function [Obj, CelestialCoo, Info] = mmsFromMatchedSources(MS, Args)
 %                   MMS/SysRemPhotometry.
 %                   Default is {'ThreshDeltaS2',1,'Niter',10}.
 %            'ColourFields' - SrcData fields {Blue, Red} whose difference is
-%                   the colour. Default is {'V_ogle','I_ogle'}.
+%                   the colour, or a single field holding a colour already
+%                   formed elsewhere, as ml.util.mergeColours produces. In the
+%                   two-field form the missing-value sentinels are cut from
+%                   each magnitude first; in the one-field form the colour is
+%                   taken as it stands. Default is {'V_ogle','I_ogle'}.
 %            'ColourMode' - How to treat sources without a valid colour:
 %                   'fill'     - assign the median colour of the field.
 %                   'fillcmd'  - assign the colour predicted by a robust
@@ -624,17 +628,28 @@ function [Obj, SrcData, Colour, FlagColourSrc] = buildColour(Obj, SrcData, Args)
     Colour        = struct();
     FlagColourSrc = [];
 
-    Blue = Args.ColourFields{1};
-    Red  = Args.ColourFields{2};
-    if ~isstruct(SrcData) || ~isfield(SrcData, Blue) || ~isfield(SrcData, Red)
-        error('mmsFromMatchedSources:NoColour','SrcData must hold the colour fields "%s" and "%s"', Blue, Red);
-    end
+    if isscalar(Args.ColourFields)
+        % A colour already formed elsewhere, e.g. by ml.util.mergeColours,
+        % taken as it stands. The sentinel cut does not apply: it belongs to
+        % the magnitudes a colour is built from, not to the colour itself.
+        Single = Args.ColourFields{1};
+        if ~isstruct(SrcData) || ~isfield(SrcData, Single)
+            error('mmsFromMatchedSources:NoColour','SrcData must hold the colour field "%s"', Single);
+        end
+        C = SrcData.(Single)(:).';
+    else
+        Blue = Args.ColourFields{1};
+        Red  = Args.ColourFields{2};
+        if ~isstruct(SrcData) || ~isfield(SrcData, Blue) || ~isfield(SrcData, Red)
+            error('mmsFromMatchedSources:NoColour','SrcData must hold the colour fields "%s" and "%s"', Blue, Red);
+        end
 
-    BlueMag = SrcData.(Blue)(:).';
-    RedMag  = SrcData.(Red)(:).';
-    BlueMag(BlueMag >= Args.MaxValidRefMag) = NaN;
-    RedMag(RedMag   >= Args.MaxValidRefMag) = NaN;
-    C       = BlueMag - RedMag;
+        BlueMag = SrcData.(Blue)(:).';
+        RedMag  = SrcData.(Red)(:).';
+        BlueMag(BlueMag >= Args.MaxValidRefMag) = NaN;
+        RedMag(RedMag   >= Args.MaxValidRefMag) = NaN;
+        C       = BlueMag - RedMag;
+    end
     IsValid = isfinite(C) & C >= Args.ColourRange(1) & C <= Args.ColourRange(2);
 
     Colour.NValid   = sum(IsValid);
