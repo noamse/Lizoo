@@ -12,6 +12,17 @@ function [AllSI,JD, MSc, AllShifted] = KMT_pipelineI(RawImageList, Args)
         Args.RA                            = celestial.coo.convertdms('17:54:16.84','gH','d');   % deg
         Args.Dec                           = celestial.coo.convertdms('-31:08:44.3','gD','d');   % deg
 
+        % Registration of the OGLE reference catalogue onto the cut-out pixels.
+        % The nominal mapping (corr - Offset)*0.26/0.4 + CentrePix was tuned on
+        % BLG41; other fields are cut out a little differently and need their
+        % own offset. Getting it wrong does not fail loudly, it just loses
+        % matches: on BLG01 the nominal value matched 23.5% of the sources
+        % where the right one matches 60.9%.
+        Args.Field                         = '';    % taken from TempName when empty
+        Args.OgleXOffset                   = [];    % per-field default when empty
+        Args.OgleYOffset                   = [];
+        Args.OgleScaleRatio                = 0.26./0.4;
+        Args.OgleCentrePix                 = 150;
         Args.ThresholdBack                 = 4000;
         Args.UseMex                        =  true;
 
@@ -358,8 +369,11 @@ function [AllSI,JD, MSc, AllShifted] = KMT_pipelineI(RawImageList, Args)
     OgleRefCat.Yogle = OgleRefCat.Y;
     OgleRefCat.Xcor  = OgleRefCat.corrX;
     OgleRefCat.Ycor  = OgleRefCat.corrY;
-    X = (OgleRefCat.Xcor - 230).*0.26 ./0.4 + 150;
-    Y = (OgleRefCat.Ycor - 230).*0.26 ./0.4 + 150;
+    [OgleXOff, OgleYOff, OgleField] = ogleOffsets(Args);
+    fprintf('OGLE registration for field %s: XOffset %.3f, YOffset %.3f\n', ...
+            OgleField, OgleXOff, OgleYOff);
+    X = (OgleRefCat.Xcor - OgleXOff).*Args.OgleScaleRatio + Args.OgleCentrePix;
+    Y = (OgleRefCat.Ycor - OgleYOff).*Args.OgleScaleRatio + Args.OgleCentrePix;
     OgleRefCat.X     = X;
     OgleRefCat.Y     = Y;
     FlagMag = OgleRefCat.I<19;
@@ -1044,4 +1058,34 @@ function [AllSI,JD, MSc, AllShifted] = KMT_pipelineI(RawImageList, Args)
 
         end
     end % if Status.Success
+end
+
+
+function [XOff, YOff, Field] = ogleOffsets(Args)
+    % Offsets carrying the OGLE reference catalogue onto the cut-out pixels.
+    % Fitted per field by matching the two lists and taking the median
+    % separation of the pairs closer than 3 pix, iterated to convergence. The
+    % values below leave a median separation of 0.78 pix on BLG41 and 1.21 on
+    % BLG01, against 1.11 and 2.13 for the nominal 230,230.
+    Field = Args.Field;
+    if isempty(Field)
+        Tok = regexp(Args.TempName, '(BLG\d+)', 'tokens', 'once');
+        if ~isempty(Tok)
+            Field = Tok{1};
+        else
+            Field = 'unknown';
+        end
+    end
+    switch upper(Field)
+        case 'BLG41'
+            Def = [229.202, 229.283];
+        case 'BLG01'
+            Def = [227.542, 229.689];
+        otherwise
+            Def = [230, 230];
+            fprintf(['No OGLE offset is recorded for field %s; using the nominal 230,230. ', ...
+                     'Fit one before trusting the colours: a wrong offset silently loses matches.\n'], Field);
+    end
+    XOff = Args.OgleXOffset;  if isempty(XOff), XOff = Def(1); end
+    YOff = Args.OgleYOffset;  if isempty(YOff), YOff = Def(2); end
 end

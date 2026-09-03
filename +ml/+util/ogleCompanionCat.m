@@ -8,8 +8,14 @@ function Cat = ogleCompanionCat(FileName, Args)
 %            OGLEdata/OB260058/OB160058.mat. The first variable in the file is
 %            used.
 %          * ...,key,val,...
+%            'Field' - Cut-out the catalogue is wanted for, 'BLG41' or 'BLG01'.
+%                   Selects the offsets below. Default is '', meaning BLG41's.
 %            'XOffset','YOffset' - Offset subtracted from the OGLE corrX and
-%                   corrY before scaling. Default is 230 for both.
+%                   corrY before scaling. Empty takes the value fitted for
+%                   Field: 229.202/229.283 for BLG41 and 227.542/229.689 for
+%                   BLG01. The nominal 230,230 is BLG41's to within half a
+%                   pixel but is 1.6 pix out on BLG01, which silently loses
+%                   most of the matches.
 %            'ScaleRatio' - OGLE pixel scale divided by the KMT one.
 %                   Default is 0.26/0.4.
 %            'CentrePix' - Pixel the offset position maps onto.
@@ -30,8 +36,9 @@ function Cat = ogleCompanionCat(FileName, Args)
 
     arguments
         FileName
-        Args.XOffset     = 230;
-        Args.YOffset     = 230;
+        Args.Field       = '';
+        Args.XOffset     = [];
+        Args.YOffset     = [];
         Args.ScaleRatio  = 0.26./0.4;
         Args.CentrePix   = 150;
         Args.ColNameX    = 'corrX';
@@ -39,6 +46,13 @@ function Cat = ogleCompanionCat(FileName, Args)
         Args.ColNameMag  = 'I';
         Args.MaxMag      = 21;
     end
+
+    switch upper(Args.Field)
+        case 'BLG01', Def = [227.542, 229.689];
+        otherwise,    Def = [229.202, 229.283];
+    end
+    if isempty(Args.XOffset), Args.XOffset = Def(1); end
+    if isempty(Args.YOffset), Args.YOffset = Def(2); end
 
     Loaded = load(FileName);
     Vars   = fieldnames(Loaded);
