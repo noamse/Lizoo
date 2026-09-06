@@ -146,6 +146,36 @@ for nine seasons and is magnified by about 1.1 mag in 2026, so:
 Using the constant would overstate the uncertainty during the event by about a
 factor two, and understate it in 2022 by a third.
 
+**The sign of a proper-motion component carries no physical meaning.** The fitted
+motion of the target is +2.20 / −2.31 mas/yr in BLG41 and −0.66 / −2.90 in
+BLG01: the same star, the same nights, opposite signs in X. This is a gauge
+difference between the two frames, not anything about the source. The per-epoch
+transformation is free at every epoch, so it absorbs any motion common to the
+field, and what survives is defined only relative to the mean motion of each
+cut-out's own star population. Those populations differ:
+
+| quantity | BLG41 | BLG01 |
+|---|---|---|
+| median PM of the field's own sources | +2.128 / +0.183 | −0.261 / −0.617 |
+
+Measured directly on the 383 well-measured stars common to both fields, the
+disagreement is the same for every star:
+
+| quantity | X | Y |
+|---|---|---|
+| PM difference, BLG01 − BLG41, all common stars | −2.41 ± 0.43 | −0.60 ± 0.57 |
+| the target | −2.86 | −0.59 |
+
+The target's offset is the population's offset. Fitting the difference as a
+constant plus a linear term in position gives, in addition, a relative rotation
+of 0.28 deg/yr and a scale drift of 4.7e-3 /yr between the two frames; removing
+both leaves 1.14 / 0.35 mas/yr, consistent with per-star measurement error.
+
+So the Y values (−2.31 and −2.90) agree only because the Y gauge offset is small,
+and the X values disagree only because the X offset is large. **What is physical
+is the differential motion between stars within one field, never the value or
+sign of a single component.**
+
 **Plotted positions are relative to the target's own mean position**, not to the
 field centre and not to any absolute reference. Each motion curve has the
 target's decade-average position subtracted, so the zero line is that average.
