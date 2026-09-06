@@ -148,9 +148,10 @@ The 0.29 mag difference is the faint-end photometric bias of section 7, which is
 +0.39 mag at I ≈ 18.1 and +0.13 at I ≈ 17.3: a *difference* of two measured
 magnitudes inflates by the difference of their biases, 0.80 + 0.26 = 1.06
 against 1.085 observed. It is a consistency check on the bias, not a discrepancy
-with the model. Calling 2026 "the event season" and 2016–2025
-"pre-event" is therefore wrong: **2025 is already magnified by 9%** and 2024 by
-1.3%.
+with the model.
+
+Calling 2026 "the event season" and 2016–2025 "pre-event" is therefore wrong:
+**2025 is already magnified by 9%** and 2024 by 1.3%.
 
 This matters for the proper-motion baseline. The astrometric deviation of a
 microlensing event does not peak with the photometric one: for these parameters
