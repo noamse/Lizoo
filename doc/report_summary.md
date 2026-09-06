@@ -70,8 +70,9 @@ iterations move the bright-star median by 0.003 mas (BLG41) and 0.001 (BLG01).
    pipeline leaves every `MAG_*` column empty), per-epoch zero point anchored on
    OGLE I, then SysRem photometry; airmass and parallactic angle computed from
    JD and the field centre; colour from OGLE V−I; quality cuts.
-3. **Joint fit 2016–2025** → proper motions. The event season is excluded so that
-   it cannot help define the motion it is later measured against.
+3. **Joint fit 2016–2025** → proper motions, with 2026 held out. See section 6 on why
+   holding out 2026 alone is not enough: the event is far longer than one
+   season.
 4. **Full-decade fit** with those motions held → one SysRem correction for the run.
 5. **Ten single-season fits** reusing that correction.
 6. **Final global fit, 2016–2026, motions solved.** *This is the solution behind
@@ -109,7 +110,41 @@ frame fit to them, is available but is **off** here.)
 
 ---
 
-### 6. Caveats that matter for reading the plots
+### 6. The event is not confined to one season
+
+With the OGLE parameters t₀ = JD 2461214.2 (2026-06-22), t_E = 231.7 d and
+u₀ = 0.499, the magnification at each season's mean epoch is:
+
+| season | (t − t₀) [d] | u | A | Δmag |
+|---|---|---|---|---|
+| 2016 | −3644 | 15.74 | 1.000 | 0.000 |
+| 2019 | −2564 | 11.08 | 1.000 | 0.000 |
+| 2022 | −1474 | 6.38 | 1.001 | −0.001 |
+| 2023 | −1114 | 4.83 | 1.003 | −0.003 |
+| 2024 | −754 | 3.29 | 1.012 | −0.013 |
+| **2025** | −394 | 1.77 | **1.085** | **−0.089** |
+| **2026** | −44 | 0.53 | **2.067** | **−0.788** |
+
+The event is above 1% magnification for **4.4 years**, above 5% for 2.6 years and
+above 10% for 2.0 years. Calling 2026 "the event season" and 2016–2025
+"pre-event" is therefore wrong: **2025 is already magnified by 9%** and 2024 by
+1.3%.
+
+This matters for the proper-motion baseline. The astrometric deviation of a
+microlensing event does not peak with the photometric one: for these parameters
+it is largest near u = √2, which falls in **2025** (2.46 mas), with 2024 at
+1.91 mas and 2026 back down to 1.63 mas as the source passes closest approach.
+So the joint fit that supplies the proper motions, which holds out 2026 alone,
+still contains the two seasons carrying the **largest** astrometric signal.
+
+Any proper motion quoted here is therefore fitted through the event, and would
+absorb part of a real astrometric excursion. A baseline free of it would have to
+stop around 2022, which costs a third of the time span and most of the leverage
+on the proper motion. Nothing in this report depends on that choice — no
+astrometric model is fitted — but a future attempt to measure the deviation
+must not treat 2016–2025 as an event-free baseline.
+
+### 7. Caveats that matter for reading the plots
 
 **The measured magnitudes run faint at the faint end.** `KMT − I_OGLE` is flat to
 ±0.04 down to I = 17, then rises to **+0.50 by I = 18.75**. The target's own
@@ -143,7 +178,7 @@ for nine seasons and is magnified by about 1.1 mag in 2026, so:
 | **10 (2026)** | **17.65** | **12.46 / 11.38** | **11.82 / 11.54** |
 | decade constant | — | 21.80 / 23.48 | 22.68 / 22.63 |
 
-Using the constant would overstate the uncertainty during the event by about a
+Using the constant would overstate the uncertainty at the peak of the event by about a
 factor two, and understate it in 2022 by a third.
 
 **The sign of a proper-motion component carries no physical meaning.** The fitted
@@ -193,7 +228,7 @@ BLG41, 478 of 621 in BLG01), which biases the plotted sample slightly bright.
 
 ---
 
-### 7. Where the numbers stand
+### 8. Where the numbers stand
 
 | quantity | BLG41 | BLG01 |
 |---|---|---|
@@ -202,14 +237,14 @@ BLG41, 478 of 621 in BLG01), which biases the plotted sample slightly bright.
 | target, whole decade | 24.62 / 21.00 | 25.48 / 21.78 |
 | target, 2026 season only | ≈ 11.7 / 11.1 | ≈ 12.2 / 11.7 |
 
-The target's decade figure is dominated by the nine pre-event seasons where it
-sits at I ≈ 18.1; in 2026 the event brightens it by about 1.1 mag and its
-residual halves. **12 mas is the target's 2026 precision, 24 mas its
+The target's decade figure is dominated by the seasons in which it sits near its
+baseline I ≈ 18.1; in 2026 the magnification of about 2.1 brightens it by 0.8 mag
+and its residual halves. 2025 is brighter than baseline too, by 0.09 mag. **12 mas is the target's 2026 precision, 24 mas its
 decade-average precision** — they are different quantities.
 
 ---
 
-### 8. Files in this report
+### 9. Files in this report
 
 | file | contents |
 |---|---|

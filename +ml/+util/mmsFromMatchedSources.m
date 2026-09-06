@@ -174,8 +174,16 @@ function [Obj, CelestialCoo, Info] = mmsFromMatchedSources(MS, Args)
 
     arguments
         MS
-        Args.RA                       = celestial.coo.convertdms('17:54:16.84','gH','d');
-        Args.Dec                      = celestial.coo.convertdms('-31:08:44.3','gD','d');
+        % Coordinates of the event itself, from the OGLE EWS page for
+        % OGLE-2026-BLG-0058. The values here used to be 17:54:16.84
+        % -31:08:44.3, which is the telescope pointing recorded in the frame
+        % headers and lies 44 arcmin away. Only secz and the parallactic angle
+        % are computed from these, and over 44 arcmin those move by 0.2% and
+        % 0.75 degrees, so nothing already fitted is materially affected; but a
+        % catalogue cone search on the old values lands on empty sky, which is
+        % what defeated every attempt to tie this field to Gaia.
+        Args.RA                       = celestial.coo.convertdms('17:52:38.09','gH','d');
+        Args.Dec                      = celestial.coo.convertdms('-31:47:36.1','gD','d');
         Args.GeoPos                   = [-70.80399722, -30.16717778];  % CTIO [Lon Lat] deg
         Args.KeepFields               = {'X','Y','X2','Y2','FLUX_PSF','MAGERR_PSF','PSF_CHI2DOF','SN'};
         Args.ColNameFlux              = 'FLUX_PSF';
