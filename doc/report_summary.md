@@ -53,9 +53,12 @@ iterations move the bright-star median by 0.003 mas (BLG41) and 0.001 (BLG01).
 - **parallax** — bulge sources give ≈0.12 mas, far below the noise floor
 - **any microlensing or astrometric-deviation model** — the solution is model-free;
   no theoretical curve of any kind has been fitted or subtracted
-- **absolute astrometry** — there is no Gaia tie. Proper motions are *relative*,
-  in the registered pixel frame; 400 mas/pix is assumed, not measured, and the
-  orientation on the sky is unknown
+- **absolute astrometry inside the fit** — the solution itself is *relative*:
+  proper motions are in the registered pixel frame, 400 mas/pix is assumed
+  rather than measured, and the orientation is not used. A Gaia tie is available
+  afterwards (`ml.util.gaiaTie`, see section 7) and gives the orientation, the
+  scale and absolute proper motions, but it is applied to the finished solution
+  and does not constrain the fit
 - acceleration or binary motion
 - any correction for the faint-end photometric bias (§6)
 
@@ -208,8 +211,40 @@ both leaves 1.14 / 0.35 mas/yr, consistent with per-star measurement error.
 
 So the Y values (−2.31 and −2.90) agree only because the Y gauge offset is small,
 and the X values disagree only because the X offset is large. **What is physical
-is the differential motion between stars within one field, never the value or
-sign of a single component.**
+is the differential motion between stars within one field**, unless the frame is
+tied to an external one — which it now can be.
+
+**Tied to Gaia, the two fields agree.** `ml.util.gaiaTie` carries a solution onto
+the Gaia frame through OGLE, giving the orientation, the plate scale and an
+absolute proper motion for every matched source:
+
+| quantity | BLG41 | BLG01 |
+|---|---|---|
+| KMT sources matched to Gaia | 532 of 594 (90%) | 447 of 621 (72%) |
+| median separation | 0.259 arcsec | 0.358 arcsec |
+| calibrators (Gaia PM error < 0.4 mas/yr, I < 18) | 426 | 327 |
+| fitted rotation of the pixel axes on the sky | **+131.01 deg** | **+130.79 deg** |
+| gauge offset removed | −0.36 / +4.41 mas/yr | −2.84 / +3.88 |
+| scatter about the Gaia relation | 3.75 / 3.83 mas/yr | 3.38 / 3.51 |
+
+**The target's proper motion:**
+
+| frame | BLG41 | BLG01 | difference |
+|---|---|---|---|
+| relative, as fitted | +2.20 / −2.31 | −0.66 / −2.90 | 2.86 / 0.59 |
+| **absolute, Gaia frame** | **−2.92 / −7.25** | **−2.22 / −7.24** | **0.70 / 0.01** |
+
+mas/yr. The sign disagreement disappears once both are on the same physical
+frame, and the two rotations, derived independently from separately reduced
+data, agree to 0.22 deg — which is what makes the tie credible rather than a fit
+to noise.
+
+Two cautions. The Y agreement of 0.01 mas/yr is far better than either field's
+own precision and is therefore luck; the honest statement is that the two agree
+to within errors of order 1 mas/yr on the mean. And the tie fixes the **frame,
+not the precision**: our scatter about the Gaia relation, 3.4 to 3.8 mas/yr,
+exceeds Gaia's own spread of 2.9 to 3.3, so most of the per-star difference is
+ours and nothing in the residual analysis improves.
 
 **Plotted positions are relative to the target's own mean position**, not to the
 field centre and not to any absolute reference. Each motion curve has the
