@@ -116,7 +116,18 @@ frame fit to them, is available but is **off** here.)
 ### 6. The event is not confined to one season
 
 With the OGLE parameters t₀ = JD 2461214.2 (2026-06-22), t_E = 231.7 d and
-u₀ = 0.499, the magnification at each season's mean epoch is:
+u₀ = 0.499, the magnification at each season's mean epoch is as below.
+
+- **u** is the angular separation between lens and source at that epoch, in
+  units of the Einstein radius: `u = sqrt(u₀² + ((t − t₀)/t_E)²)`. It is
+  dimensionless, falls to u₀ = 0.499 at closest approach, and is large long
+  before and after the event.
+- **A** is the **flux** magnification, `A = (u² + 2) / (u·sqrt(u² + 4))`. A = 1
+  means unmagnified; A = 2 means twice as much light.
+- **Δmag** is the same quantity in magnitudes, `Δmag = −2.5·log₁₀(A)`. The two
+  columns are not independent: A = 2.067 is Δmag = −0.788, and −0.788 mag
+  inverts to A = 2.066. Where the text below quotes "a magnification of about
+  2.1" and "0.8 mag" it is quoting the same number twice.
 
 | season | (t − t₀) [d] | u | A | Δmag |
 |---|---|---|---|---|
@@ -129,7 +140,15 @@ u₀ = 0.499, the magnification at each season's mean epoch is:
 | **2026** | −44 | 0.53 | **2.067** | **−0.788** |
 
 The event is above 1% magnification for **4.4 years**, above 5% for 2.6 years and
-above 10% for 2.0 years. Calling 2026 "the event season" and 2016–2025
+above 10% for 2.0 years.
+
+The model predicts 0.80 mag of brightening at the 2026 season median, whereas
+the measured magnitudes give 1.085 (18.724 at baseline against 17.639 in 2026).
+The 0.29 mag difference is the faint-end photometric bias of section 7, which is
++0.39 mag at I ≈ 18.1 and +0.13 at I ≈ 17.3: a *difference* of two measured
+magnitudes inflates by the difference of their biases, 0.80 + 0.26 = 1.06
+against 1.085 observed. It is a consistency check on the bias, not a discrepancy
+with the model. Calling 2026 "the event season" and 2016–2025
 "pre-event" is therefore wrong: **2025 is already magnified by 9%** and 2024 by
 1.3%.
 
@@ -170,7 +189,7 @@ Neither is a per-epoch measurement uncertainty. The decade value is a population
 estimate at a fixed magnitude; the season value is the target's own scatter.
 
 They differ by a factor of two where it matters most. The target is at I ≈ 18.1
-for nine seasons and is magnified by about 1.1 mag in 2026, so:
+for nine seasons and is magnified by 0.80 mag in 2026, so:
 
 | season | target mag | errX / errY, BLG41 | BLG01 |
 |---|---|---|---|
