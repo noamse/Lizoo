@@ -146,6 +146,18 @@ for nine seasons and is magnified by about 1.1 mag in 2026, so:
 Using the constant would overstate the uncertainty during the event by about a
 factor two, and understate it in 2022 by a third.
 
+**Plotted positions are relative to the target's own mean position**, not to the
+field centre and not to any absolute reference. Each motion curve has the
+target's decade-average position subtracted, so the zero line is that average.
+The frame itself is set by the ensemble of 594 (BLG41) and 621 (BLG01) field
+stars through the per-epoch transformation, not by the geometric centre of the
+cut-out: differences along a curve are meaningful, the absolute level is not,
+and the level cannot be compared between the two fields, whose cut-outs have
+different origins and independently fitted frames. For scale, the target lies
++0.42, +0.39 pix (+168, +155 mas) from the centre of the BLG41 cut-out and
++1.55, +0.15 pix (+620, +60 mas) from the centre of BLG01; the centring absorbs
+both.
+
 **Only sources with an OGLE counterpart appear in the RMS plots** (540 of 594 in
 BLG41, 478 of 621 in BLG01), which biases the plotted sample slightly bright.
 
