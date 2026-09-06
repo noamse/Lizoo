@@ -8,7 +8,7 @@ Prepared 2026-09-06. Solution: `~/KMTdata/Results/v3_Final/IFfinal_260058_CTIO_<
 
 ### 1. Data
 
-| | BLG41 | BLG01 |
+| quantity | BLG41 | BLG01 |
 |---|---|---|
 | exposures | 19 133 | 19 981 |
 | after cuts | 17 354 | 17 687 |
@@ -165,7 +165,7 @@ BLG41, 478 of 621 in BLG01), which biases the plotted sample slightly bright.
 
 ### 7. Where the numbers stand
 
-| | BLG41 | BLG01 |
+| quantity | BLG41 | BLG01 |
 |---|---|---|
 | bright-star residual (I < 17), ΔX/ΔY | 6.414 / 6.879 mas | 6.475 / 7.007 mas |
 | calibrating stars, ΔX/ΔY | 8.29 / 8.30 | 7.47 / 8.14 |
