@@ -2,7 +2,6 @@
 ## Astrometric analysis — summary
 
 Prepared 2026-09-06. Solution: `~/KMTdata/Results/v3_Final/IFfinal_260058_CTIO_<field>.mat`
-(variable `IFsys`). Code at commit `47c52cf` on branch `dev1`.
 
 ---
 
@@ -36,7 +35,7 @@ the colour; they are not used in the astrometry.
 **Detrending terms**
 - **differential chromatic refraction (DCR)** — `[1, sin(pa)·secz, cos(pa)·secz]`
   plus higher orders in `secz·sin(pa)` and `secz·cos(pa)`, fitted **in 6 colour
-  bins** (equal population). *This is included.*
+  bins** (equal population). 
 - **annual term**
 - **pixel-phase correction**, from the per-epoch registration shifts
 - **SysRem**, 2 components on the astrometric residuals, computed **once over the
@@ -73,13 +72,10 @@ iterations move the bright-star median by 0.003 mas (BLG41) and 0.001 (BLG01).
    pipeline leaves every `MAG_*` column empty), per-epoch zero point anchored on
    OGLE I, then SysRem photometry; airmass and parallactic angle computed from
    JD and the field centre; colour from OGLE V−I; quality cuts.
-3. **Joint fit 2016–2025** → proper motions, with 2026 held out. See section 6 on why
-   holding out 2026 alone is not enough: the event is far longer than one
-   season.
+3. **Joint fit 2016–2025** → proper motions
 4. **Full-decade fit** with those motions held → one SysRem correction for the run.
 5. **Ten single-season fits** reusing that correction.
-6. **Final global fit, 2016–2026, motions solved.** *This is the solution behind
-   every plot in this report.*
+6. **Final global fit, 2016–2026, motions solved.** 
 
 ---
 
@@ -109,7 +105,8 @@ One point to be clear about: in this solution the per-epoch transformation is
 fitted from **all** sources, each weighted by its own residual scatter. The
 calibrating stars are a clean, well-measured subset shown for reference; they do
 not exclusively define the frame. (`UseRefSources`, which would restrict the
-frame fit to them, is available but is **off** here.)
+frame fit to them, is available but is **off** here, because it proved to 
+lead to a worse solution.)
 
 ---
 
