@@ -124,52 +124,75 @@ radius, everything else at the defaults (runs in
 mas. **BLG01 fails outright** — two and a half times worse, with the field's
 seasonal wander nearly quadrupled. **BLG41 is roughly neutral**, not clearly
 worse: the bright rstd degrades slightly while the event source's seasonal
-wander improves by 11% in X. So the honest summary is that restricting the frame
-never helped and once hurt badly, not that it is uniformly worse.
+wander improves by 11% in X.
 
-The reference stars themselves are excellent, which is what makes the result
-informative. On BLG41, 36 survivors are measured to **4.2 / 4.0 mas and detected
-in 100% of epochs**, against **14.0 / 14.8 mas and 81%** for the field as a
-whole. The selection did exactly what it was meant to do.
+**BLG01's run in that table is compromised and should be re-measured.** The test
+ran on 2026-08-26; the per-field OGLE registration fix (`e89b484`) landed on
+2026-09-03, a week later. Until then BLG41's offset was applied to BLG01, which
+held its OGLE coverage at 23.5% instead of 60.9% — and the reference selection
+needs an OGLE magnitude, so it was drawing from a starved pool. Re-selecting on
+the current solution:
 
-But the frame is an average, and its error falls as the star scatter over the
-square root of their number:
+| | in the 14 < I < 16 window | isolated at 5 pix |
+|---|---|---|
+| BLG41 | 87 | 36 |
+| BLG01, as tested (BLG41 offsets) | — | ~10 at the time, 24 reproducing the bug now |
+| **BLG01, fixed offsets** | **62** | **35** |
 
-| | scatter per star | N | frame noise, σ/√N |
-|---|---|---|---|
-| BLG41, all sources | 14.0 mas | 594 | **0.57 mas** |
-| BLG41, 36 references | 4.2 mas | 36 | **0.70 mas** |
-| BLG01, 10 references | ~4.2 mas | 10 | **1.33 mas** |
+So BLG01's ten stars were an artefact of the registration bug, not a property of
+the field. With the offsets right the two fields have almost the same pool.
 
-The clean stars are 3.3 times better individually, but there are 4.1 times fewer
-of them in the square root, so the crowd wins — narrowly on BLG41, which is why
-that field came out neutral, and decisively on BLG01. The last row predicts a
-degradation of 1.33 / 0.56 = **2.4x**, against the **2.5x** actually measured.
-Ten reference stars are twenty equations for six parameters per epoch, and their
-own 4 mas scatter propagates into the frame and from there into every source.
-(The BLG01 row assumes BLG41's measured reference-star precision for its ten
-stars, which was not measured separately.)
+**What is actually established.** The reference stars are excellent: 36 survivors
+on BLG41 measure 3.89 / 3.79 mas and are detected in **100%** of epochs, against
+9.90 / 10.23 mas and 81% for the field. But they are few, and two numbers show
+what that costs:
 
-Three further reasons the subset cannot win on these data:
+| | ideal frame noise | share of field inverse variance | leverage at the target | max leverage |
+|---|---|---|---|---|
+| BLG41, all 594 sources | 0.295 / 0.310 mas | 100% | 0.0017 | 0.011 |
+| BLG41, 36 references | 0.653 / 0.673 mas | 20% | 0.0290 | 0.248 |
+| BLG01, all 621 sources | 0.297 / 0.312 mas | 100% | 0.0016 | 0.010 |
+| BLG01, 35 references | 0.662 / 0.700 mas | 20% | 0.0337 | 0.416 |
+| BLG01, 24 references, bug reproduced | — | — | 0.0761 | **0.939** |
+
+Leverage here is `h(r) = a' (Σ a a')⁻¹ a` with `a = [x, y, 1]`: the variance of
+the frame shift predicted at a field position, in units of a single reference
+star's variance. A max leverage near 1, as the bugged BLG01 selection reaches,
+means the frame at the field corner is no better determined than one star — the
+six affine parameters are being extrapolated from a clustered set spanning only
+55 x 72 pix, against 92 x 88 for the full field.
+
+**A caution on how much this explains.** These frame-noise figures are of order
+0.3 to 1.3 mas, while the per-source scatter is 7 to 10 mas. Added in quadrature
+they move the residual by well under 1%, so they **cannot** account for BLG01's
+observed jump from 6.85 to 17.27 mas. That degradation is an order of magnitude
+larger than any variance argument of this kind predicts, and its mechanism —
+most likely a failure of the alternating solve to converge on so few, so poorly
+distributed stars — has not been verified. Any apparent numerical agreement
+between the frame-noise ratio and the measured ratio is a coincidence, not an
+explanation.
+
+Three reasons a clean subset is nonetheless not expected to win here:
 
 - **The fit already does this, more gently.** Each source is weighted by its own
   residual scatter — `calculateNee` takes `median(W,1,'omitnan')` per source — so
   a noisy faint star already contributes almost nothing. `RefSrcFlag` replaces
   that soft weighting with a hard cut, discarding information the weights were
-  using correctly.
+  using correctly. The effective number of sources behind the weighted frame is
+  223 (BLG41) and 225 (BLG01), not 594 and 621, so the fit has already done most
+  of the selecting.
 - **The dominant noise is shared.** The two-field comparison put about 74% of
   the nightly noise in the atmosphere, common to every star. Reference stars sit
   under the same atmosphere as the target, so a cleaner frame cannot reach it.
   Only the ~26% reduction noise is attackable, and 26% in variance is 15% in
-  amplitude — which caps the possible gain at about the size of the shifts seen
-  above. Nothing here could have been a factor of two.
-- **The selection is not a neutral subset.** It requires OGLE coverage, and OGLE
-  covers only 29% of BLG01's sources, leaving 13 candidates there before the
-  isolation cut. BLG01's failure follows from colour coverage rather than from
-  the idea.
+  amplitude, which caps the possible gain.
+- **BLG41's own test was neutral**, and BLG41 was never affected by the
+  registration bug. That is the one clean measurement in the table, and it says
+  the reference frame was not the binding constraint on that field.
 
-The approach is sound and remains implemented; on these data the reference frame
-was simply not the binding constraint — the atmosphere was.
+The approach is sound and remains implemented. `UseRefSources` stays **off** by
+default, but on the strength of the pool count above the BLG01 half of this
+comparison is owed a rerun on the fixed pipeline before the question is closed.
 
 ---
 
