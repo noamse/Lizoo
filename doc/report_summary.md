@@ -90,7 +90,9 @@ Selection (all conditions required):
   pixels with the per-field offset above.
 - a star's own OGLE counterpart is excluded from its companion test.
 
-Surviving: **287 stars in BLG41, 253 in BLG01.**
+Surviving: **287 stars in BLG41, 253 in BLG01** — these are the blue points in
+Figure 1, and are *not* the smaller set the reference-frame test uses. See the
+table below.
 
 **Colour key in the RMS plots**
 
@@ -101,16 +103,32 @@ Surviving: **287 stars in BLG41, 253 in BLG01.**
 | black line | running median of *all* stars, in 0.5 mag bins |
 | red star | the target |
 
+**Two different selections appear in this report, and they must not be
+confused.** Both use the isolation rule above; they differ only in the magnitude
+window:
+
+| | window | in window | isolated | share of all sources |
+|---|---|---|---|---|
+| **calibrating stars** — the blue points in Figure 1 | 14 < I < 19 | 529 / 470 | **287 / 253** | 48% / 41% |
+| **frame stars** — what `UseRefSources` would fit the frame from | 14 < I < 16 | 87 / 62 | **36 / 35** | 6% / 6% |
+
+BLG41 first, BLG01 second. The blue points are "clean" only in the sense of being
+un-blended: the 251 extra stars on BLG41 are the faint half, 16 < I < 19, and
+they measure 9.06 / 9.51 mas, essentially the field average of 9.90 / 10.23. The
+36 bright ones measure 3.89 / 3.79. Requiring brightness as well as isolation is
+what cuts 287 down to 36.
+
 One point to be clear about: in this solution the per-epoch transformation is
-fitted from **all** sources, each weighted by its own residual scatter. The
-calibrating stars are a clean, well-measured subset shown for reference; they do
-not exclusively define the frame. `UseRefSources`, which would restrict the
-frame fit to them, is available but is **off** here.
+fitted from **all** sources, each weighted by its own residual scatter. Neither
+of the two sets above defines the frame. `UseRefSources`, which would restrict
+the frame fit to the 36 / 35 frame stars — not to the 287 / 253 blue points —
+is available but is **off** here.
 
 **Why the frame is fitted from all stars.** This was measured rather than
-assumed. `UseRefSources` was run at full scale on both fields, selecting on a
-magnitude window and on having no companion brighter than I = 18 within a given
-radius, everything else at the defaults:
+assumed. `UseRefSources` was run at full scale on both fields, selecting
+**14 < I < 16** and no companion brighter than I = 18 within a given radius —
+the frame-star row of the table above, not the blue points — everything else at
+the defaults:
 
 | run | ref stars | rstd bright X/Y | seasonal wander |
 |---|---|---|---|
