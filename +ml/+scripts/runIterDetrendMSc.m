@@ -35,7 +35,13 @@ function [IFsys, Obj, IFsysB, Info] = runIterDetrendMSc(MS, Args)
 %                   or the path of an OGLE .mat, which is read by
 %                   ml.util.ogleCompanionCat. Strongly worth supplying: the
 %                   matched source list merges close pairs that OGLE resolves.
-%                   Default is [].
+%                   A path requires 'Field', since the OGLE registration
+%                   offsets differ between cut-outs. Default is [].
+%            'Field' - Cut-out the data belong to, 'BLG41' or 'BLG01'. Only
+%                   used to register the OGLE catalogue when RefCompanionCat
+%                   is given as a path, and mandatory in that case: the
+%                   offsets differ per field and the wrong ones silently lose
+%                   most of the matches. Default is ''.
 %            'selectRefSourcesArgs' - Cell array of further arguments for
 %                   ml.util.selectRefSources. Appended after the four above, so
 %                   anything given here overrides them. Default is {}.
@@ -117,6 +123,7 @@ function [IFsys, Obj, IFsysB, Info] = runIterDetrendMSc(MS, Args)
         Args.RefCompanionRadius        = 5;
         Args.RefCompanionMaxMag        = 18;
         Args.RefCompanionCat           = [];
+        Args.Field                     = '';
         Args.selectRefSourcesArgs      = {};
         Args.RefSrcFlag                = [];
         Args.FixedPM                   = [];
@@ -160,7 +167,17 @@ function [IFsys, Obj, IFsysB, Info] = runIterDetrendMSc(MS, Args)
         end
         CompCat = Args.RefCompanionCat;
         if ischar(CompCat) || isstring(CompCat)
-            CompCat = ml.util.ogleCompanionCat(char(CompCat));
+            % The OGLE offsets differ per cut-out. Without a field the
+            % catalogue would be registered with BLG41's, which silently
+            % loses most matches on any other field.
+            if isempty(Args.Field)
+                error('runIterDetrendMSc:NoField', ...
+                    ['RefCompanionCat was given as a path but Field is empty. ', ...
+                     'ogleCompanionCat would fall back to BLG41''s offsets, ', ...
+                     'which silently loses most of the matches on other fields. ', ...
+                     'Pass Field, or build the catalogue yourself and pass the matrix.']);
+            end
+            CompCat = ml.util.ogleCompanionCat(char(CompCat), 'Field', Args.Field);
         end
         % the explicit arguments come first so that selectRefSourcesArgs, being
         % last, can still override any of them

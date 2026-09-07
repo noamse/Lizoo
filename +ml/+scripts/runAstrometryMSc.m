@@ -10,7 +10,9 @@ function [OutputFileName, File] = runAstrometryMSc(MS, Args)
 %          * ...,key,val,...
 %            'EventNum' - Event number recorded in the output. Default is [].
 %            'Site' - Site name recorded in the output. Default is 'CTIO'.
-%            'Field' - Field name recorded in the output. Default is ''.
+%            'Field' - Field name recorded in the output, and used to register
+%                   the OGLE catalogue when RefCompanionCat is a path.
+%                   Default is ''.
 %            'UseRefSources' - Fit the per-epoch transformation from a clean
 %                   subset of stars rather than from every source, while still
 %                   solving the source parameters for all of them.
@@ -24,7 +26,8 @@ function [OutputFileName, File] = runAstrometryMSc(MS, Args)
 %                   Default is 18.
 %            'RefCompanionCat' - [X, Y, Mag] matrix, or the path of an OGLE
 %                   .mat, searched for companions alongside the object's own
-%                   sources. Default is [].
+%                   sources. A path needs 'Field' set, the OGLE registration
+%                   offsets differing between cut-outs. Default is [].
 %            'runIterDetrendMScArgs' - Cell array of further arguments for
 %                   ml.scripts.runIterDetrendMSc. Appended after the reference
 %                   ones, so anything given here overrides them. Default is {}.
@@ -117,6 +120,7 @@ function [OutputFileName, File] = runAstrometryMSc(MS, Args)
         'RefCompanionRadius',    Args.RefCompanionRadius, ...
         'RefCompanionMaxMag',    Args.RefCompanionMaxMag, ...
         'RefCompanionCat',       Args.RefCompanionCat, ...
+        'Field',                 Args.Field, ...
         Args.runIterDetrendMScArgs{:});
 
     % --- Step 2: Gaia proper-motion calibration (opt-in) --------------------
