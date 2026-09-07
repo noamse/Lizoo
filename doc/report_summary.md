@@ -344,8 +344,8 @@ decade-average precision** — they are different quantities.
 | file | contents |
 |---|---|
 | `report_RMS_afterPM.png` | residual RMS against OGLE I, per axis, per field — **after position and proper motion removed** |
-| `report_motion_<field>_<axis>_nobin.png` | source motion, unbinned; top = position with PM **retained**, bottom = residual |
-| `report_motion_<field>_<axis>_binsid.png` | the same, binned in **one sidereal month** (27.321661 d); error bars are the **RMS within the bin** |
+| `report_motion_<field>_nobin.png` | source motion, unbinned; 2x2 panel, columns X and Y, top row = position with PM **retained**, bottom row = residual |
+| `report_motion_<field>_binsid.png` | the same, binned in **one sidereal month** (27.321661 d); error bars are the **RMS within the bin** |
 | `source_motion_<field>.csv` | `JD, X_mas, Y_mas, errX_decade, errY_decade, errX_season, errY_season, season` |
 
 Eight motion figures in total: 2 fields × 2 axes × 2 binnings.
