@@ -59,6 +59,16 @@ function [IFsys, Obj, IFsysB, Info] = runIterDetrendMSc(MS, Args)
 %                   fitted.
 %            'fixedPMFromFitArgs' - Cell array for ml.util.fixedPMFromFit, used
 %                   only when FixedPM is a path. Default is {}.
+%            'ParSFixed' - Source parameters to hold fixed, as a 4 by Nsrc
+%                   matrix over the *input* object's sources, in the same
+%                   [x0; y0; muX; muY] order and units as IterFit.ParS.
+%                   Finite entries are held, NaN are fitted. Merged on top of
+%                   whatever FixedPM sets, so the two can be combined and this
+%                   one wins where both give a value. Use it to pin positions
+%                   as well as motions, for instance onto a Gaia reference, so
+%                   that the per-epoch frame is fitted against an absolute
+%                   catalogue rather than against the fit's own gauge.
+%                   Default is [].
 %            'NiterNoWeightsBeforeSys' - Unweighted iterations of the first
 %                   pass. Default is 2.
 %            'NiterWeightsBeforeSys' - Weighted iterations of the first pass.
@@ -127,6 +137,7 @@ function [IFsys, Obj, IFsysB, Info] = runIterDetrendMSc(MS, Args)
         Args.selectRefSourcesArgs      = {};
         Args.RefSrcFlag                = [];
         Args.FixedPM                   = [];
+        Args.ParSFixed                 = [];
         Args.fixedPMFromFitArgs        = {};
         Args.NiterNoWeightsBeforeSys   = 2;
         Args.NiterWeightsBeforeSys     = 10;
@@ -232,6 +243,29 @@ function [IFsys, Obj, IFsysB, Info] = runIterDetrendMSc(MS, Args)
         Info.FixedPM.Nfree = Obj.Nsrc - Info.FixedPM.Nheld;
         report(Args.Verbosity, 'Holding the proper motion of %d of %d sources, %d keep a fitted one\n', ...
                Info.FixedPM.Nheld, Obj.Nsrc, Info.FixedPM.Nfree);
+    end
+
+    % --- parameters held explicitly, positions included ---------------------
+    % Given over the input object's sources, so it is subset the same way
+    % FixedPM is, and laid on top of it: an entry given here wins.
+    Info.ParSFixed = struct('Used',false, 'Nheld',0);
+    if ~isempty(Args.ParSFixed)
+        if size(Args.ParSFixed,1)~=4
+            error('runIterDetrendMSc:BadParSFixed', ...
+                  'ParSFixed must hold four rows, x0 y0 muX muY, not %d', size(Args.ParSFixed,1));
+        end
+        PSsub = nan(4, Obj.Nsrc);
+        Ok    = Info.SrcInd(:).' >= 1 & Info.SrcInd(:).' <= size(Args.ParSFixed,2);
+        PSsub(:,Ok) = Args.ParSFixed(:, Info.SrcInd(Ok));
+        if isempty(ParSFixed)
+            ParSFixed = nan(4, Obj.Nsrc);
+        end
+        Take            = isfinite(PSsub);
+        ParSFixed(Take) = PSsub(Take);
+        Info.ParSFixed.Used  = true;
+        Info.ParSFixed.Nheld = sum(any(isfinite(PSsub),1));
+        report(Args.Verbosity, 'Holding explicit parameters for %d of %d sources (%d fully pinned)\n', ...
+               Info.ParSFixed.Nheld, Obj.Nsrc, sum(all(isfinite(PSsub),1)));
     end
 
     if Args.PixPhase && ~Info.PixPhaseAvailable
