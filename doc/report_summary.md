@@ -110,8 +110,7 @@ frame fit to them, is available but is **off** here.
 **Why the frame is fitted from all stars.** This was measured rather than
 assumed. `UseRefSources` was run at full scale on both fields, selecting on a
 magnitude window and on having no companion brighter than I = 18 within a given
-radius, everything else at the defaults (runs in
-`~/KMTdata/Results/AstrometryMSc_ref/`):
+radius, everything else at the defaults:
 
 | run | ref stars | rstd bright X/Y | seasonal wander |
 |---|---|---|---|
@@ -134,9 +133,9 @@ it drew from a starved pool: **10 isolated stars, against 35 with the offsets
 right**. BLG41, which the bug never touched, had 36 both times.
 
 The whole four-step chain was therefore rerun on both fields with
-`UseRefSources` and the correctly registered catalogue
-(`~/KMTdata/Results/v3_RefFrame/`), against the same chain fitting the frame
-from all sources. Identical inputs, identical convergence settings:
+`UseRefSources` and the correctly registered catalogue, against the same chain
+fitting the frame from all sources. Identical inputs, identical convergence
+settings:
 
 | field | frame | bright rstd X/Y | target rstd X/Y | bright wander | target wander |
 |---|---|---|---|---|---|
