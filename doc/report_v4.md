@@ -247,8 +247,27 @@ applies to the target in every reduction we have made.
 |---|---|
 | `report_v4_RMS.png` | residual RMS against OGLE I, per axis and field, for this run |
 | `report_v4_motion_<field>_target.png` | the target, sidereal-month bins, 2x2 |
-| `report_v4_motion_<field>_cal{1,2,3}.png` | three calibration stars, proper motion **pinned to Gaia** |
-| `report_v4_motion_<field>_out{1,2,3}.png` | the three I ~ 18 passengers, freely fitted |
+| `report_v4_motion_<field>_cal_d{24,30,43}.png` | three calibration stars, proper motion **pinned to Gaia** |
+| `report_v4_motion_<field>_out_d{04,21,48}.png` | the three I ~ 18 passengers, freely fitted |
+
+The `_d NN` suffix is the star's distance from the target in pixels, and names
+the **same physical star in both fields** — the figures are directly comparable
+across fields. (An earlier version ranked the comparison stars per field, so
+`cal1` denoted different objects in BLG41 and BLG01.)
+
+**Axis convention.** The Gaia-to-pixel map has a negative determinant: it
+contains a parity flip, and the pixel X axis runs *opposite* to increasing RA.
+
+| | rotation, flip removed | scale |
+|---|---|---|
+| BLG41 | −0.317 deg | 2.5194 pix/arcsec |
+| BLG01 | −0.444 deg | 2.5290 pix/arcsec |
+
+So the cut-outs are essentially aligned with RA and Dec apart from that X flip,
+with a third of a degree of residual rotation, and the two fields differ in
+orientation by only 0.126 deg. In each figure the **legend** quotes the motion
+along the pixel axis and the **panel heading** quotes it on the sky, so the two
+carry opposite signs in X by construction; both are labelled accordingly.
 
 In every motion figure the columns are the two axes, X left and Y right; the top
 row keeps the proper motion and the bottom row removes it. **A pinned star's red
