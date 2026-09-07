@@ -104,9 +104,72 @@ Surviving: **287 stars in BLG41, 253 in BLG01.**
 One point to be clear about: in this solution the per-epoch transformation is
 fitted from **all** sources, each weighted by its own residual scatter. The
 calibrating stars are a clean, well-measured subset shown for reference; they do
-not exclusively define the frame. (`UseRefSources`, which would restrict the
-frame fit to them, is available but is **off** here, because it proved to 
-lead to a worse solution.)
+not exclusively define the frame. `UseRefSources`, which would restrict the
+frame fit to them, is available but is **off** here.
+
+**Why the frame is fitted from all stars.** This was measured rather than
+assumed. `UseRefSources` was run at full scale on both fields, selecting on a
+magnitude window and on having no companion brighter than I = 18 within a given
+radius, everything else at the defaults (runs in
+`~/KMTdata/Results/AstrometryMSc_ref/`):
+
+| run | ref stars | rstd bright X/Y | seasonal wander |
+|---|---|---|---|
+| **BLG41, frame from all sources** | 594 | **8.85 / 9.23** | **2.21 / 2.57** |
+| BLG41, companion radius 5 pix | 36 | 9.06 / 9.73 | 1.97 / 2.80 |
+| BLG41, companion radius 3 pix | 48 | 8.67 / 9.91 | 1.96 / 2.82 |
+| **BLG01, frame from all sources** | 621 | **6.85 / 7.40** | ~1.5 / 1.3 |
+| BLG01, companion radius 5 pix | 10 | **17.27 / 14.55** | 5.74 / 3.55 |
+
+mas. **BLG01 fails outright** — two and a half times worse, with the field's
+seasonal wander nearly quadrupled. **BLG41 is roughly neutral**, not clearly
+worse: the bright rstd degrades slightly while the event source's seasonal
+wander improves by 11% in X. So the honest summary is that restricting the frame
+never helped and once hurt badly, not that it is uniformly worse.
+
+The reference stars themselves are excellent, which is what makes the result
+informative. On BLG41, 36 survivors are measured to **4.2 / 4.0 mas and detected
+in 100% of epochs**, against **14.0 / 14.8 mas and 81%** for the field as a
+whole. The selection did exactly what it was meant to do.
+
+But the frame is an average, and its error falls as the star scatter over the
+square root of their number:
+
+| | scatter per star | N | frame noise, σ/√N |
+|---|---|---|---|
+| BLG41, all sources | 14.0 mas | 594 | **0.57 mas** |
+| BLG41, 36 references | 4.2 mas | 36 | **0.70 mas** |
+| BLG01, 10 references | ~4.2 mas | 10 | **1.33 mas** |
+
+The clean stars are 3.3 times better individually, but there are 4.1 times fewer
+of them in the square root, so the crowd wins — narrowly on BLG41, which is why
+that field came out neutral, and decisively on BLG01. The last row predicts a
+degradation of 1.33 / 0.56 = **2.4x**, against the **2.5x** actually measured.
+Ten reference stars are twenty equations for six parameters per epoch, and their
+own 4 mas scatter propagates into the frame and from there into every source.
+(The BLG01 row assumes BLG41's measured reference-star precision for its ten
+stars, which was not measured separately.)
+
+Three further reasons the subset cannot win on these data:
+
+- **The fit already does this, more gently.** Each source is weighted by its own
+  residual scatter — `calculateNee` takes `median(W,1,'omitnan')` per source — so
+  a noisy faint star already contributes almost nothing. `RefSrcFlag` replaces
+  that soft weighting with a hard cut, discarding information the weights were
+  using correctly.
+- **The dominant noise is shared.** The two-field comparison put about 74% of
+  the nightly noise in the atmosphere, common to every star. Reference stars sit
+  under the same atmosphere as the target, so a cleaner frame cannot reach it.
+  Only the ~26% reduction noise is attackable, and 26% in variance is 15% in
+  amplitude — which caps the possible gain at about the size of the shifts seen
+  above. Nothing here could have been a factor of two.
+- **The selection is not a neutral subset.** It requires OGLE coverage, and OGLE
+  covers only 29% of BLG01's sources, leaving 13 candidates there before the
+  isolation cut. BLG01's failure follows from colour coverage rather than from
+  the idea.
+
+The approach is sound and remains implemented; on these data the reference frame
+was simply not the binding constraint — the atmosphere was.
 
 ---
 
