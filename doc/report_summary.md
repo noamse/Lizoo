@@ -248,20 +248,63 @@ absolute proper motion for every matched source:
 
 | frame | BLG41 | BLG01 | difference |
 |---|---|---|---|
-| relative, as fitted | +2.20 / −2.31 | −0.66 / −2.90 | 2.86 / 0.59 |
-| **absolute, Gaia frame** | **−2.92 / −7.25** | **−2.22 / −7.24** | **0.70 / 0.01** |
+| relative (detector x, y), as fitted | +2.196 / −2.310 | −0.660 / −2.900 | 2.856 / 0.590 |
+| **absolute (μ_α cos δ, μ_δ), Gaia frame** | **−2.917 / −7.248** | **−2.215 / −7.244** | **0.702 / 0.004** |
 
-mas/yr. The sign disagreement disappears once both are on the same physical
+mas/yr, taken from `IF.ParS(3:4,Ie)` at 400 mas/pix, target index 383 (BLG41)
+and 450 (BLG01). **The two rows are not in the same axes**: the relative values
+are in the cut-out's detector x/y, the absolute ones are (μ_α cos δ, μ_δ), since
+`gaiaTie` returns `Tie.A \ (PM − Offset)` and so carries the pixel frame into
+the Gaia frame through a 131 deg rotation with parity and a 0.92 scale.
+
+The sign disagreement disappears once both are on the same physical
 frame, and the two rotations, derived independently from separately reduced
 data, agree to 0.22 deg — which is what makes the tie credible rather than a fit
-to noise.
+to noise. The relative disagreement itself is gauge, not astrophysics: both
+cut-outs have nearly the same orientation (131.01 and 130.79 deg), so the
++2.20 against −0.66 in x is the unconstrained constant-plus-gradient freedom of
+each field's own frame, which is exactly what the tie removes.
 
-Two cautions. The Y agreement of 0.01 mas/yr is far better than either field's
-own precision and is therefore luck; the honest statement is that the two agree
-to within errors of order 1 mas/yr on the mean. And the tie fixes the **frame,
-not the precision**: our scatter about the Gaia relation, 3.4 to 3.8 mas/yr,
-exceeds Gaia's own spread of 2.9 to 3.3, so most of the per-star difference is
-ours and nothing in the residual analysis improves.
+**Against Gaia's own value for this star.** The target has a Gaia counterpart,
+so the absolute motion can be checked directly rather than only field against
+field:
+
+| | μ_α cos δ | μ_δ |
+|---|---|---|
+| Gaia DR3, the target | −2.479 | −9.129 |
+| ours, BLG41 | −2.917 (−0.44) | −7.248 (+1.88) |
+| ours, BLG01 | −2.215 (+0.26) | −7.244 (+1.89) |
+
+mas/yr, with the difference from Gaia in brackets. μ_α cos δ agrees well. μ_δ sits
+1.88 mas/yr away, and by nearly the same amount in both fields — which should
+**not** be read as two independent confirmations, because BLG01 reused BLG41's
+OGLE-to-Gaia solution and a common systematic in that bridge would reproduce
+this pattern exactly. Against the per-source scatter it is about 0.5 sigma and
+unremarkable. It is not the event: 1.88 mas/yr over the decade baseline is some
+19 mas of accumulated displacement, an order of magnitude beyond the ~2.5 mas
+peak deviation the model allows.
+
+**Which error applies.** Three different numbers circulate and they measure
+different things:
+
+- **3.4 to 3.8 mas/yr** — scatter about the Gaia relation, *per source*. This is
+  the one that applies to a single star's absolute proper motion, the target
+  included.
+- **0.16 / 0.17 mas/yr** — the error on the tie *transformation*, from 532 and
+  447 matched sources. It bounds the frame, not any individual star.
+- **~1.0 / 0.7 mas/yr** — the target's own relative proper motion uncertainty,
+  from the scatter of its season means about its fitted line.
+
+Reduction choices contribute far less: the pixel-phase on/off variants give
++2.21 / −2.31 and +2.27 / −2.27 (BLG41), −0.65 / −2.89 and −0.71 / −2.94
+(BLG01), a spread of about 0.06 mas/yr.
+
+Two cautions. The μ_δ agreement of 0.004 mas/yr between the fields is far better
+than either field's own precision and is therefore luck; the honest statement is
+that the two agree to within errors of order 1 mas/yr on the mean. And the tie
+fixes the **frame, not the precision**: our per-source scatter of 3.4 to 3.8
+mas/yr exceeds Gaia's own spread of 2.9 to 3.3, so most of the per-star
+difference is ours and nothing in the residual analysis improves.
 
 **Plotted positions are relative to the target's own mean position**, not to the
 field centre and not to any absolute reference. Each motion curve has the
