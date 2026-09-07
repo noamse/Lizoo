@@ -2,6 +2,8 @@
 ## Astrometric analysis — summary
 
 Prepared 2026-09-06. Solution: `~/KMTdata/Results/v3_Final/IFfinal_260058_CTIO_<field>.mat`
+A separate reduction, restricted to a Gaia-pinned calibration set, is reported
+in `KMT260058_v4_report.pdf`; it is not adopted here.
 
 ---
 
@@ -461,133 +463,13 @@ decade-average precision** — they are different quantities.
 
 ---
 
-### 9. The Gaia-pinned reduction (v4)
-
-A second, independent reduction was built to a different specification: restrict
-the analysis to a clean calibration set, and tie the frame to Gaia from the
-start rather than afterwards. It is reported here in full because it is a fair
-test of an obvious idea, and because **it did not improve the target**.
-
-**What was done.**
-
-1. **Calibration set.** 14 < I_OGLE < 17, no companion brighter than I = 18
-   within 2.0 arcsec, and a Gaia counterpart with **RUWE < 1.4**. The target is
-   added explicitly (at I = 18.13 it falls outside the magnitude window). Every
-   other source is dropped at the input, so all measurements and quality cuts
-   act on this set alone: **127 sources on BLG41, 97 on BLG01**.
-2. **The frame is pinned to Gaia.** Each calibration star's position *and*
-   proper motion are held at Gaia's values, converted into cut-out pixels, so
-   the per-epoch affine is fitted against Gaia positions propagated to that
-   epoch by Gaia's own motions. 126 and 96 stars are pinned; the target is left
-   free, since pinning it would erase the signal. The six-parameter gauge is
-   gone by construction and no post-hoc tie is needed.
-3. **Chain.** With motions supplied by Gaia, the joint proper-motion fit and the
-   per-season fits are unnecessary. Two steps remain: a full-decade SysRem
-   correction, then a final solution reusing it with the pixel-phase term on.
-
-**Getting RUWE.** It is **not** in the local catsHTM DR3 table, which carries
-`astrometric_chi2_al` and `astrometric_n_good_obs_al` but neither RUWE nor the
-`u0(G, BP-RP)` table needed to normalise UWE into it. The true values were
-queried from the Gaia archive instead (9464 sources in a 3 arcmin cone, cached
-in `~/KMTdata/GaiaRef/`). This mattered: at G < 17, **87%** pass RUWE < 1.4,
-where the unnormalised UWE proxy predicted 74%. Gaia's own proper-motion errors
-for these stars are **0.070 / 0.044 mas/yr**, some fifty times better than our
-internal frame.
-
-**The Gaia-to-pixel map** is fitted directly from the matched pairs, not carried
-through OGLE: the OGLE bridge is needed only to identify which star is which,
-and routing coordinates through it inherits OGLE's ~110 mas astrometric error.
-Direct fitting gives residuals of **23 / 16 mas** (BLG41) and 21 / 20 (BLG01)
-against 252 / 159 through OGLE, and a scale of 2.519 pix/arcsec against the
-2.500 expected at 0.4 arcsec/pix — an independent check that the map is right.
-The residual is static per star, so it displaces each star's residuals by a
-constant and does not touch proper motion or any time-dependent signal.
-
-**Result: the target is measured worse, not better.**
-
-| | v3, all sources + post-hoc tie | **v4, calibration set + Gaia-pinned** |
-|---|---|---|
-| target rstd, BLG41 | **24.62 / 21.00** | 29.62 / 22.63 |
-| target rstd, BLG01 | **25.48 / 21.78** | 28.73 / 23.25 |
-| frame-star rstd, BLG41 | 6.41 / 6.88 | 6.13 / 5.20 |
-| frame-star rstd, BLG01 | 6.48 / 7.01 | 5.30 / 5.42 |
-
-mas. The calibration stars themselves are measured **better** — they are bright
-and isolated, which is what they were selected for — while the target is
-**14 to 20% worse**. The explanation is the one already quantified in section 5:
-a frame built from 126 stars instead of ~600 weighted sources has roughly twice
-the ideal noise and twenty to fifty times the leverage. Restricting the analysis
-set is what costs; the Gaia tie is not at fault.
-
-Convergence is not the problem. Over the frame stars the last three iterations
-move the median by **0.0009 mas (BLG41) and 0.0026 (BLG01)**, comparable to v3.
-
-**The two fields do not agree better than before.** Converting the target's
-motion out of pixel axes with each field's own Gaia map:
-
-| | BLG41 | BLG01 | difference |
-|---|---|---|---|
-| **v4, Gaia-pinned** | −1.799 / −6.780 | −1.158 / −7.147 | **0.640 / 0.367** |
-| v3, post-hoc tie | −2.92 / −7.25 | −2.22 / −7.24 | 0.702 / 0.004 |
-
-mas/yr. Both agree at about the 1 mas/yr level, which is the target's own
-proper-motion uncertainty, but pinning the frame did not tighten it. The
-post-hoc tie was already doing this job.
-
-**The comparison stars agree better than the target does.** Three stars at the
-target's own magnitude, outside the calibration set and freely fitted, were
-carried through both fields as unpinned passengers:
-
-| star | BLG41 | BLG01 | difference |
-|---|---|---|---|
-| I = 18.14, 4.5 pix from the target | −0.63 / −5.47 | −1.08 / −5.47 | 0.45 / 0.00 |
-| I = 17.91, 21 pix | −6.81 / −9.99 | −6.94 / −10.06 | 0.13 / 0.07 |
-| I = 18.05, 48 pix | +3.06 / −6.34 | +2.80 / −6.48 | 0.26 / 0.14 |
-| **the target**, I = 18.13 | −1.80 / −6.78 | −1.16 / −7.15 | **0.64 / 0.37** |
-
-mas/yr. Stars of the same brightness, measured the same way in the same frames,
-reproduce between the two fields two to five times better than the target does.
-The target's extra disagreement is specific to it, and the obvious candidates
-are its blending and the fact that its motion is fitted straight through a
-magnification event lasting several years (section 6).
-
-**Sensitivity to the set.** Adding just those three passengers moved the fitted
-target motion by **0.42 / 0.63 mas/yr on BLG41** and 0.09 / 0.41 on BLG01. A
-result that shifts by half a mas per year when three faint stars join a set of
-127 is not a precise result, and this is the most direct measurement in this
-report of how uncertain the target's motion actually is.
-
-**Overlap of the two fields.** Matching the two source lists directly, after
-fitting the offset between the cut-outs (−1.11 / +0.24 pix), gives **546 of 594
-BLG41 sources and 575 of 621 BLG01 sources matched within 1 pixel — 92% and
-93%**, rising to 97% and 98% at 1.5 pix. These are indeed two observations of
-nearly the same sky. The unmatched 7% are faint and marginal: median MAG_PSF
-17.18 against 16.87 for matched stars, and a detection fraction of 0.54 against
-0.84. They are stars one reduction found and the other did not, or blends split
-differently. Restricted to MAG_PSF < 17 the agreement is 94%.
-
-Matching *through* Gaia and OGLE instead gives a misleading 58%, because their
-identification coverage over our sources is only 90% / 72% (Gaia) — sources
-neither catalogue identifies cannot be paired and count as non-overlapping.
-
-**Verdict.** v4 is a clean, gauge-free reduction whose calibration stars are
-measured better than anything in v3, and it is the right way to obtain absolute
-astrometry. It is **not** adopted as the primary solution, because the quantity
-this project exists to measure — the target's astrometry — comes out worse. The
-v3 solution with a post-hoc Gaia tie remains the reference.
-
----
-
-### 10. Files in this report
+### 9. Files in this report
 
 | file | contents |
 |---|---|
 | `report_RMS_afterPM.png` | residual RMS against OGLE I, per axis, per field — **after position and proper motion removed** |
 | `report_motion_<field>_nobin.png` | source motion, unbinned; 2x2 panel, columns X and Y, top row = position with PM **retained**, bottom row = residual |
 | `report_motion_<field>_binsid.png` | the same, binned in **one sidereal month** (27.321661 d); error bars are the **RMS within the bin** |
-| `report_v4_motion_<field>_target.png` | **v4** motion of the target, sidereal-month bins, 2x2 as above |
-| `report_v4_motion_<field>_cal{1,2,3}.png` | **v4** motion of three calibration stars, proper motion **pinned to Gaia** |
-| `report_v4_motion_<field>_out{1,2,3}.png` | **v4** motion of three I~18 comparison stars outside the set, freely fitted |
 | `source_motion_<field>.csv` | `JD, X_mas, Y_mas, errX_decade, errY_decade, errX_season, errY_season, season` |
 
 Eight motion figures in total: 2 fields × 2 axes × 2 binnings.
