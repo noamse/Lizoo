@@ -126,73 +126,92 @@ seasonal wander nearly quadrupled. **BLG41 is roughly neutral**, not clearly
 worse: the bright rstd degrades slightly while the event source's seasonal
 wander improves by 11% in X.
 
-**BLG01's run in that table is compromised and should be re-measured.** The test
-ran on 2026-08-26; the per-field OGLE registration fix (`e89b484`) landed on
-2026-09-03, a week later. Until then BLG41's offset was applied to BLG01, which
-held its OGLE coverage at 23.5% instead of 60.9% — and the reference selection
-needs an OGLE magnitude, so it was drawing from a starved pool. Re-selecting on
-the current solution:
+**That BLG01 run was compromised, and has now been redone.** The test ran on
+2026-08-26; the per-field OGLE registration fix (`e89b484`) landed on 2026-09-03.
+Until then BLG41's offset was applied to BLG01, holding its OGLE coverage at
+23.5% instead of 60.9% — and the reference selection needs an OGLE magnitude, so
+it drew from a starved pool: **10 isolated stars, against 35 with the offsets
+right**. BLG41, which the bug never touched, had 36 both times.
 
-| | in the 14 < I < 16 window | isolated at 5 pix |
+The whole four-step chain was therefore rerun on both fields with
+`UseRefSources` and the correctly registered catalogue
+(`~/KMTdata/Results/v3_RefFrame/`), against the same chain fitting the frame
+from all sources. Identical inputs, identical convergence settings:
+
+| field | frame | bright rstd X/Y | target rstd X/Y | bright wander | target wander |
+|---|---|---|---|---|---|
+| BLG41 | all 594 | **6.414 / 6.879** | 24.62 / 21.00 | 2.62 / 2.77 | 10.75 / 7.00 |
+| BLG41 | 36 refs | 6.569 / 6.905 | **24.54 / 20.83** | 2.69 / 2.97 | 11.49 / 7.03 |
+| BLG01 | all 621 | 6.475 / **7.007** | 25.48 / 21.78 | 2.83 / 3.06 | 13.63 / 9.13 |
+| BLG01 | 35 refs | **6.445** / 7.225 | **25.21** / 21.84 | 2.84 / **3.01** | 13.66 / **9.00** |
+
+mas. **BLG01's failure is gone.** With 35 well-distributed reference stars in
+place of 10 it now behaves exactly as BLG41 always did: every difference is
+within 3%, and it falls both ways. The 2.5x collapse was an artefact of the
+registration bug, not a property of the field or of the method.
+
+**Neither field gains anything.** Across both fields the reference frame moves
+the bright residual by at most 3%, improves the target marginally on BLG41 and
+BLG01 in X, and degrades it slightly in Y. Nothing here approaches the factor of
+three to five the target would need.
+
+The tie to Gaia says the same. Re-tying the reference-frame solutions, the
+target's **absolute** proper motion is stable against the frame choice even
+though the relative one is not:
+
+| field | relative, all -> refs | absolute, all -> refs |
 |---|---|---|
-| BLG41 | 87 | 36 |
-| BLG01, as tested (BLG41 offsets) | — | ~10 at the time, 24 reproducing the bug now |
-| **BLG01, fixed offsets** | **62** | **35** |
+| BLG41 | +2.20 / −2.31 -> +2.50 / −1.82 | −2.92 / −7.25 -> −3.16 / −7.18 |
+| BLG01 | −0.66 / −2.90 -> −0.45 / −2.94 | −2.22 / −7.24 -> −2.25 / −7.29 |
 
-So BLG01's ten stars were an artefact of the registration bug, not a property of
-the field. With the offsets right the two fields have almost the same pool.
+mas/yr. The relative motion shifts by up to 0.49 mas/yr, the absolute by at most
+0.24 — confirming that the shift is gauge, as restricting the frame to a
+different set of stars must produce. But the all-source solutions tie *better*:
+their two fields' rotations agree to **0.22 deg** (131.01 and 130.79) where the
+reference-frame ones differ by **3.8 deg** (133.24 and 129.42), and their
+per-source scatter about the Gaia relation is lower (3.75/3.83 against 4.54/4.29
+on BLG41). That is a further, independent argument for the full field.
 
-**What is actually established.** The reference stars are excellent: 36 survivors
-on BLG41 measure 3.89 / 3.79 mas and are detected in **100%** of epochs, against
-9.90 / 10.23 mas and 81% for the field. But they are few, and two numbers show
-what that costs:
+**Why the subset cannot win here.** The reference stars are individually
+excellent — 36 survivors on BLG41 measure 3.89 / 3.79 mas and are detected in
+**100%** of epochs, against 9.90 / 10.23 mas and 81% for the field — but they
+are few, and two numbers show the cost:
 
-| | ideal frame noise | share of field inverse variance | leverage at the target | max leverage |
+| | ideal frame noise | share of field inverse variance | leverage at target | max leverage |
 |---|---|---|---|---|
 | BLG41, all 594 sources | 0.295 / 0.310 mas | 100% | 0.0017 | 0.011 |
 | BLG41, 36 references | 0.653 / 0.673 mas | 20% | 0.0290 | 0.248 |
 | BLG01, all 621 sources | 0.297 / 0.312 mas | 100% | 0.0016 | 0.010 |
 | BLG01, 35 references | 0.662 / 0.700 mas | 20% | 0.0337 | 0.416 |
-| BLG01, 24 references, bug reproduced | — | — | 0.0761 | **0.939** |
+| BLG01, 10 references, the bug | — | — | 0.0761 | **0.939** |
 
-Leverage here is `h(r) = a' (Σ a a')⁻¹ a` with `a = [x, y, 1]`: the variance of
-the frame shift predicted at a field position, in units of a single reference
-star's variance. A max leverage near 1, as the bugged BLG01 selection reaches,
-means the frame at the field corner is no better determined than one star — the
-six affine parameters are being extrapolated from a clustered set spanning only
-55 x 72 pix, against 92 x 88 for the full field.
+Leverage is `h(r) = a' (Σ a a')⁻¹ a` with `a = [x, y, 1]`: the variance of the
+frame shift predicted at a field position, in units of one reference star's
+variance. The bugged selection reaches a max leverage near 1 — the frame at the
+field corner no better determined than a single star — with its stars spanning
+only 55 x 72 pix against 92 x 88 for the full field. That is the mechanism by
+which ten clustered stars wrecked the solution, though the precise amplification
+to a factor 2.5 was never quantified and, the run having been redone, no longer
+needs to be.
 
-**A caution on how much this explains.** These frame-noise figures are of order
-0.3 to 1.3 mas, while the per-source scatter is 7 to 10 mas. Added in quadrature
-they move the residual by well under 1%, so they **cannot** account for BLG01's
-observed jump from 6.85 to 17.27 mas. That degradation is an order of magnitude
-larger than any variance argument of this kind predicts, and its mechanism —
-most likely a failure of the alternating solve to converge on so few, so poorly
-distributed stars — has not been verified. Any apparent numerical agreement
-between the frame-noise ratio and the measured ratio is a coincidence, not an
-explanation.
-
-Three reasons a clean subset is nonetheless not expected to win here:
+Two further reasons, independent of counting:
 
 - **The fit already does this, more gently.** Each source is weighted by its own
   residual scatter — `calculateNee` takes `median(W,1,'omitnan')` per source — so
   a noisy faint star already contributes almost nothing. `RefSrcFlag` replaces
-  that soft weighting with a hard cut, discarding information the weights were
-  using correctly. The effective number of sources behind the weighted frame is
-  223 (BLG41) and 225 (BLG01), not 594 and 621, so the fit has already done most
-  of the selecting.
+  that soft weighting with a hard cut. The effective number of sources behind
+  the weighted frame is 223 (BLG41) and 225 (BLG01), not 594 and 621: the fit
+  has already done most of the selecting.
 - **The dominant noise is shared.** The two-field comparison put about 74% of
   the nightly noise in the atmosphere, common to every star. Reference stars sit
   under the same atmosphere as the target, so a cleaner frame cannot reach it.
   Only the ~26% reduction noise is attackable, and 26% in variance is 15% in
-  amplitude, which caps the possible gain.
-- **BLG41's own test was neutral**, and BLG41 was never affected by the
-  registration bug. That is the one clean measurement in the table, and it says
-  the reference frame was not the binding constraint on that field.
+  amplitude, which caps the possible gain — about the size of the shifts in the
+  table above.
 
 The approach is sound and remains implemented. `UseRefSources` stays **off** by
-default, but on the strength of the pool count above the BLG01 half of this
-comparison is owed a rerun on the fixed pipeline before the question is closed.
+default, now on a clean measurement of both fields rather than one clean field
+and one corrupted run.
 
 ---
 
