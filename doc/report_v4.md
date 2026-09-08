@@ -1,9 +1,12 @@
 # KMT-2026-BLG-0521 / OGLE-2026-BLG-0058
 
-## The Gaia-pinned reduction (v4) — standalone report
+## The restricted-set reductions (v4 and v5) — standalone report
 
-Prepared 2026-09-07. Solution: `~/KMTdata/Results/v4b/IFfinal_<field>.mat`
-(variable `IFsys`). This document describes **only** this run. The decade
+Prepared 2026-09-08. Solutions: `~/KMTdata/Results/v4b/IFfinal_<field>.mat` and
+`~/KMTdata/Results/v5/IFfinal_<field>.mat` (variable `IFsys` in each). This
+document describes **only** these two runs, which share one source set and
+differ in exactly one respect: v4 pins the frame to Gaia during the fit, v5
+fits everything freely and ties to Gaia afterwards. The decade
 reduction that remains the project's reference solution is described in
 `KMT260058_astrometry_report.pdf`.
 
@@ -224,16 +227,89 @@ as non-overlapping.
 
 ---
 
-### 9. Verdict
+### 9. v5 — the same set, freely fitted
 
-v4 is a clean, gauge-free reduction. Its calibration stars are the
-best-measured stars produced by this project, and pinning to Gaia is the right
-way to obtain absolute astrometry. It is **not** adopted as the primary
-solution, for two reasons:
+v4 changes two things at once against the reference reduction: it shrinks the
+source set, and it pins the frame. v5 separates them. It uses **exactly the same
+source list** as v4b — read from the same file, not re-selected — the same two
+steps, the same iteration counts and the same SysRem and pixel-phase settings.
+The only difference is that nothing is pinned: every calibration star is freely
+fitted and takes part in the frame determination at every step, and Gaia enters
+only afterwards, as a post-hoc tie.
 
-1. The quantity the project exists to measure — the target's astrometry — comes
-   out 14 to 20% worse, because a 126-star frame is noisier than a 600-star one.
-2. The two fields' proper motions agree no better than under the post-hoc tie.
+So **v3 to v5 measures what restricting the set costs**, and **v5 to v4b
+measures what pinning does**.
+
+**Target residual RMS**
+
+| | BLG41 ΔX / ΔY | BLG01 ΔX / ΔY |
+|---|---|---|
+| **v3** — ~600 sources, free, post-hoc tie | **24.62 / 21.00** | **25.48 / 21.78** |
+| **v5** — 130/100 sources, free, post-hoc tie | 25.61 / 22.27 | 28.45 / 23.15 |
+| **v4b** — the same sources, pinned to Gaia | 29.62 / 22.63 | 28.73 / 23.25 |
+
+| step | isolates | BLG41 X / Y | BLG01 X / Y |
+|---|---|---|---|
+| v3 → v5 | restricting the set | +4.0% / +6.0% | +11.7% / +6.3% |
+| v5 → v4b | pinning the frame | +15.7% / +1.6% | +1.0% / +0.4% |
+
+Both hurt and neither dominates consistently. Restricting the set costs 4 to 12%
+everywhere; pinning costs almost nothing except in BLG41's X, where it costs
+16%. The reference reduction remains the best for the target on every axis in
+both fields.
+
+**Frame stars.** Over exactly the same 126 / 96 stars:
+
+| | BLG41 | BLG01 |
+|---|---|---|
+| v5, freely fitted | **4.87 / 4.81** | **4.77 / 4.77** |
+| v4b, pinned to Gaia | 6.13 / 5.20 | 5.30 / 5.42 |
+
+4.8 mas is the best frame-star astrometry this project has produced. The
+comparison is not entirely fair — the free fit adjusts four parameters per star
+and so absorbs part of each star's own systematics, which the pinned version
+cannot — but the ~1.3 mas gap is the price of holding stars at catalogue values.
+
+Convergence over the frame stars: 0.0041 mas (BLG41) and 0.0002 (BLG01).
+
+**Inter-field agreement of the target's absolute motion.**
+
+| | difference between the fields |
+|---|---|
+| v3 | 0.702 / 0.004 |
+| v5, `gaiaTie` | 0.072 / 0.123 |
+| v5, positional-map tie | 0.363 / 0.294 |
+| v4b | 0.640 / 0.367 |
+
+mas/yr. v5 agrees best, but **the headline 0.072 should not be quoted alone**.
+`gaiaTie` fits a 2 by 2 matrix from a proper-motion regression, and on these
+small sets it returned rotations of **146.34 deg for BLG41 and 108.65 for
+BLG01** — 38 deg apart, where the direct positional map puts the two cut-outs
+0.126 deg apart. That matrix is fitting noise. Re-tying independently, with the
+linear part taken from the positional map and only the gauge constant from the
+proper-motion comparison, gives 0.363 / 0.294 instead. The honest statement is
+that v5's fields agree to **0.07 to 0.36 in RA and 0.12 to 0.29 in Dec**, and
+that the choice of tie method is itself a systematic of 0.2 to 0.6 mas/yr.
+
+The gauge removed from v5 is −0.219 / +4.758 mas/yr (BLG41, 130 calibrators) and
++2.834 / +3.983 (BLG01, 100). With it removed, the seven plotted stars agree
+between the fields to 0.25 to 0.78 mas/yr in RA and 0.02 to 0.87 in Dec.
+
+---
+
+### 10. Verdict
+
+Neither v4 nor v5 is adopted as the primary solution. Restricting the analysis
+to the calibration set costs 4 to 12% on the target, and pinning the frame to
+Gaia costs a further 0 to 16%; the reference reduction is better on every axis
+in both fields. What the pair does establish, by differencing, is that **both
+choices cost something and the set restriction is the more consistent penalty**
+— pinning is nearly free except on BLG41's X axis.
+
+v5 nevertheless produces the best frame stars (4.8 mas) and the best inter-field
+agreement of the target's absolute motion of any reduction here, and it does so
+while leaving every calibration star free to take part in the frame. If a
+restricted-set reduction is wanted, v5 rather than v4 is the one to use.
 
 Its most valuable output is not the astrometry but section 7: the direct
 measurement of how far a blended neighbour is dragged by the event, which
@@ -241,7 +317,7 @@ applies to the target in every reduction we have made.
 
 ---
 
-### 10. Figures and files
+### 11. Figures and files
 
 | file | content |
 |---|---|
@@ -249,6 +325,7 @@ applies to the target in every reduction we have made.
 | `report_v4_motion_<field>_target.png` | the target, sidereal-month bins, 2x2 |
 | `report_v4_motion_<field>_cal_d{24,30,43}.png` | three calibration stars, proper motion **pinned to Gaia** |
 | `report_v4_motion_<field>_out_d{04,21,48}.png` | the three I ~ 18 passengers, freely fitted |
+| `report_v5_motion_<field>_*.png` | the same seven stars in **v5**, where nothing is pinned; the quoted sky motions have the gauge removed and are absolute |
 
 The `_d NN` suffix is the star's distance from the target in pixels, and names
 the **same physical star in both fields** — the figures are directly comparable
