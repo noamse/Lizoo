@@ -35,11 +35,20 @@ to Gaia from the start rather than afterwards.
 
 | | BLG41 | BLG01 |
 |---|---|---|
-| sources in the input MSc | 1177 | 1187 |
-| **analysis set** | **130** | **100** |
-| of which pinned to Gaia | 126 | 96 |
+| raw sources in the MSc file | 1177 | 1187 |
+| surviving the standard quality cuts — **the reference reduction's set** | **594** | **621** |
+| **analysis set of these runs** | **130** | **100** |
+| of which pinned to Gaia (v4 only) | 126 | 96 |
 | free: target + passengers | 4 | 4 |
 | epochs | 19 133 | 19 981 |
+
+The row that matters for comparison is the second: the reference reduction fits
+**594 and 621** sources, and these runs fit 130 and 100 of them. The raw file
+holds about 1180 entries, but half of those are marginal detections that the
+standard conversion discards before any reduction sees them — they are found in
+a median of **10%** of epochs, against 80% for the sources that survive. Every
+source detected in more than half the epochs is kept, without exception. So the
+restriction imposed here is 130 out of 594, not 130 out of 1177.
 
 ---
 
