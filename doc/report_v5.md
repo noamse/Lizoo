@@ -205,6 +205,19 @@ described in section 3.
 
 ---
 
+**Superseded — absolute proper motions.** Every Gaia tie made before the v6
+reduction removed only the **constant** part of the gauge. Relative astrometry
+leaves the proper motions free up to a constant *plus a linear gradient across
+the field*, and the residual gradient is a shear of about −0.036 mas/yr per
+pixel, found at nearly the same value in both fields. Removing the full
+six-parameter gauge cuts the scatter of our motions about Gaia from
+4.34 / 3.57 to 0.98 / 0.66 mas/yr (BLG41) and 3.48 / 3.20 to 1.00 / 0.70
+(BLG01), and moves the target's motion by a few tenths of a mas/yr.
+**All absolute proper motions in this document are therefore superseded by
+`KMT260058_v6_report.pdf`**, which gives −2.017 ± 0.335 / −7.163 ± 0.360
+(BLG41) and −1.781 ± 0.256 / −7.136 ± 0.377 (BLG01) mas/yr. Relative motions,
+residual scatters and everything else here are unaffected.
+
 ### 5. Results
 
 | | BLG41 ΔX / ΔY | BLG01 ΔX / ΔY |
