@@ -192,6 +192,25 @@ moves. The neighbour moves *away* from the target, consistently in both fields,
 which is what PSF fitting a blend tends to do as flux is reattributed to the
 brightening component.
 
+**Coordinates.** Pixel positions are per field, since the two cut-outs are
+offset by about 1.1 pixels; sky positions are derived by inverting each field's
+own Gaia-to-pixel map, and the two fields agree on them to **2 to 9 mas**, which
+is an independent check on both maps.
+
+| star | I_OGLE | dist [pix] | BLG41 pixel | BLG01 pixel | RA (J2000) | Dec (J2000) |
+|---|---|---|---|---|---|---|
+| `target` | 18.13 | 0.0 | 150.4, 150.4 | 151.6, 150.2 | 17:52:38.085 | −31:47:36.21 |
+| `cal_d24` | 16.68 | 24.5 | 161.3, 172.2 | 162.4, 172.1 | 17:52:37.746 | −31:47:27.53 |
+| `cal_d30` | 16.63 | 30.5 | 120.4, 154.6 | 121.4, 154.5 | 17:52:39.023 | −31:47:34.60 |
+| `cal_d43` | 16.94 | 42.9 | 110.9, 166.6 | 111.9, 166.5 | 17:52:39.318 | −31:47:29.89 |
+| `out_d04` | 18.14 | 4.5 | 146.4, 148.3 | 147.6, 148.0 | 17:52:38.210 | −31:47:37.06 |
+| `out_d21` | 17.91 | 21.3 | 155.3, 171.1 | 156.4, 170.9 | 17:52:37.935 | −31:47:28.01 |
+| `out_d48` | 18.05 | 48.5 | 198.6, 145.4 | 199.8, 145.0 | 17:52:36.585 | −31:47:38.10 |
+
+The target's recovered position, 17:52:38.085 −31:47:36.21, sits 0.11 arcsec
+from the OGLE EWS coordinates the pipeline was pointed at, which is the accuracy
+of the centroid plus the map, not a disagreement.
+
 Three consequences:
 
 - **That star is unusable as a comparison.** It was chosen as the closest at the
