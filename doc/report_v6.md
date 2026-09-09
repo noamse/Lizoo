@@ -17,10 +17,6 @@ at selection**; RUWE enters only afterwards, when the finished solution is tied
 to Gaia. The target passes the selection on its own merits and needs no special
 handling.
 
-This is v5 with the magnitude window widened from 14–17 to 14–19 and the RUWE
-cut moved to the end. Both changes help: **v6 measures the target better than
-any previous reduction, including the reference one.**
-
 ---
 
 ### 2. Object selection, step by step
@@ -34,12 +30,12 @@ any previous reduction, including the reference one.**
 | ... and isolated: no I < 18 companion within 2.0 arcsec | **287** | **253** |
 | **= analysis set actually fitted** | **287** | **253** |
 
-The isolation cut is now the dominant one, removing 46% of the magnitude-selected
-sources on both fields. The set is more than twice v5's 130 / 100.
+The isolation cut is the dominant one, removing 46% of the magnitude-selected
+sources on both fields.
 
 **The target is a member.** At I = 18.13 it lies inside the window and passes
-the isolation test, so unlike v4 and v5 it is not added by hand and no
-"passenger" stars are needed.
+the isolation test, so it enters the fit on its own merits rather than being
+added by hand.
 
 For the tie only, Gaia is required: **273 of 287** and **225 of 253** sources
 have a Gaia counterpart, and of those **220** and **177** pass RUWE < 1.4.
@@ -60,21 +56,19 @@ compensating in the per-epoch transformations changes no residual. In the proper
 motions this freedom is **a constant plus a linear gradient across the field** —
 six parameters, not two.
 
-Every tie made in this project before v6 removed **only the constant**. The
-residual shows up plainly in the cross terms: `corr(Δμ_α, Y) = −0.75` on BLG41,
+Removing only the constant leaves the gradient in place, and it shows up
+plainly in the cross terms: `corr(Δμ_α, Y) = −0.75` on BLG41,
 a **shear of −0.037 mas/yr per pixel**, and −0.035 on BLG01 — nearly the same
 value in two independently reduced fields, so it is a property of the method,
-not noise. Removing the full six-parameter gauge:
+not noise. The full six-parameter gauge is therefore removed here:
 
 | scatter of our proper motions about Gaia | constant only | **full gauge** |
 |---|---|---|
 | BLG41 | 4.34 / 3.57 mas/yr | **0.98 / 0.66** |
 | BLG01 | 3.48 / 3.20 mas/yr | **1.00 / 0.70** |
 
-A factor of three to four. The gauge removed here is a constant of
-+0.015 / +5.170 (BLG41) and +2.275 / +4.329 (BLG01) mas/yr, plus the gradient
-above. **The absolute proper motions in the earlier reports are affected by
-this and should be read as superseded.**
+A factor of three to four. The gauge removed is a constant of +0.015 / +5.170
+(BLG41) and +2.275 / +4.329 (BLG01) mas/yr, plus the gradient above.
 
 ---
 
@@ -110,8 +104,8 @@ removed.
 
 - **Per-epoch affine** — 6 parameters per exposure in `ParE`, stored as the
   deviation from the identity: translation (2), rotation (1), uniform scale (1),
-  shear (2). Each epoch's six parameters come from 287 sources, so 574 equations
-  for 6 unknowns, against 260 in v5 and 1188 in the reference reduction.
+  shear (2). Each epoch's six parameters come from 287 sources, so 574
+  equations for 6 unknowns.
 - **Per source** — position at `JD0` = 2019-06-01 and proper motion, 4
   parameters in `ParS`. All free; `ParSFixed` is empty.
 - **DCR** — `[1, sin(pa)·secz, cos(pa)·secz]` plus six higher orders in
@@ -139,19 +133,9 @@ No per-season fitting enters the solution. Seasons are used only for reporting.
 | stars brighter than I = 17 | **5.15 / 5.06** | **4.93 / 5.12** |
 | the target | **23.75 / 19.63** | **21.36 / 20.37** |
 
-mas. Against the other reductions:
-
-| target residual RMS | BLG41 | BLG01 |
-|---|---|---|
-| v3, reference, ~600 sources | 24.62 / 21.00 | 25.48 / 21.78 |
-| v5, 130 / 100 sources, RUWE-cut | 25.61 / 22.27 | 28.45 / 23.15 |
-| **v6, 287 / 253 sources** | **23.75 / 19.63** | **21.36 / 20.37** |
-
-**v6 is the best on every axis in both fields** — 3.5% better than the reference
-on BLG41 and 16% better on BLG01. The lesson from v5 is now clear: restricting
-the set to bright isolated stars helps, but restricting it *too far* costs more
-than it gains. 287 isolated stars beat both 130 isolated stars and ~600
-unfiltered ones.
+mas. The calibration stars are measured to about 5 mas over the decade, and the
+target, at I = 18.13, to about 20 mas — consistent with the running median of
+the residual RMS at its magnitude.
 
 ---
 
@@ -278,7 +262,7 @@ crowding, not a catalogue cut.
 | `report_v6_RMS.png` | residual RMS against OGLE I, per axis and field |
 | `report_v6_pm_vs_gaia.png` | our absolute proper motion against Gaia's, after the tie |
 | `report_v6_chi2.png` | χ² distribution of the monthly binned residuals, target marked |
-| `report_v6_radec_<field>_<tag>.png` | RA against time, Dec against time, and RA against Dec colour-coded by time |
+| `report_v6_radec_<field>_<tag>.png` | RA and Dec **residuals** against time, and against each other colour-coded by time, with position and proper motion removed |
 | `report_v6_motion_<field>_<tag>.png` | the 2x2 motion figures, proper motion retained and removed |
 | `source_motion_v6_<field>.csv` | the target, per epoch |
 | `source_motion_v6_<field>_<tag>.csv` | each comparison star, per epoch |
