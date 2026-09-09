@@ -28,24 +28,88 @@ the colour; they are not used in the astrometry.
 
 ### 2. What **is** in the fit
 
-**Per epoch**
-- full affine transformation, 6 parameters: translation, rotation, scale, shear
+The reduction runs in **two passes**, and which terms are active differs between
+them. This matters for reading the saved objects: `IFsys.AnnualEffect` and
+`IFsys.PixPhase` both read `0` in every solution, which does **not** mean those
+effects were ignored — it means they were fitted and subtracted in pass 1 and
+switched off for pass 2, which works on data from which they have already been
+removed.
 
-**Per source**
-- position (x₀, y₀) and proper motion (μx, μy) — 4 parameters
+| | pass 1 | between | pass 2 (final) |
+|---|---|---|---|
+| per-epoch affine | fitted | | fitted |
+| per-source position and motion | fitted | | fitted |
+| DCR / chromatic refraction | fitted | | **fitted again** |
+| annual term | **fitted and subtracted from the data** | | forced off |
+| pixel-phase term | **fitted and subtracted from the data** | | forced off |
+| SysRem | | applied | |
+| iterative reweighting | 15 iterations | | 6 iterations |
 
-**Detrending terms**
-- **differential chromatic refraction (DCR)** — `[1, sin(pa)·secz, cos(pa)·secz]`
-  plus higher orders in `secz·sin(pa)` and `secz·cos(pa)`, fitted **in 6 colour
-  bins** (equal population). 
-- **annual term**
-- **pixel-phase correction**, from the per-epoch registration shifts
-- **SysRem**, 2 components on the astrometric residuals, computed **once over the
-  whole decade** and reused by every sub-fit
-- iterative reweighting from the residuals, with moving-median outlier rejection
+`runIterDetrend` sets `AnnualEffect = false` and `PixPhase = false` whenever it
+is called with `FinalStep`, which `runIterDetrendMSc` passes only on pass 2. The
+corrected object from pass 1 is what pass 2 receives, so nothing is lost.
+
+**Per epoch — the frame.** A full 2-D affine, **6 parameters per exposure**,
+stored in `ParE` as `[a₁₁−1, a₁₂, t_x, a₂₁, a₂₂−1, t_y]`; the linear rows hold
+the deviation from the identity, so all-zero is "already aligned". The six
+degrees of freedom split into translation (2), rotation (1), uniform scale (1)
+and shear (2). Measured sizes over the decade: translation is much the largest
+at 37 / 28 mas rms, rotation 34 arcsec rms and scale 1.6×10⁻⁴, each moving a
+star at the cut-out edge by about 10 mas. With ~17 000 exposures this block
+holds ~104 000 free parameters, against ~2 400 for all the sources together.
+
+**Per source — the astrometry we want.** Position (x₀, y₀) at `JD0` = 2019-06-01
+and proper motion (μx, μy), **4 parameters per star**, in `ParS`, in pixels and
+pixels per year at 400 mas/pix. This is the only block carrying the science.
+
+**Differential chromatic refraction.** The atmosphere refracts blue light more
+than red, displacing a star along the parallactic angle by an amount that grows
+with airmass and depends on its colour. Modelled per axis as
+`[1, sin(pa)·secz, cos(pa)·secz]` plus six higher-order terms in
+`(secz·sin pa)ⁿ` and `(secz·cos pa)ⁿ` for n = 2, 3, 4 — **9 parameters per axis,
+18 in total** — and fitted separately in **6 equal-population colour bins**
+(V−I edges −2.44, −0.94, −0.23, 0, 0.11, 0.24, 2.41). Equal-population
+quantile binning is invariant under any monotonic transformation of the colour,
+which is why a colour-scale error cannot move the bin membership.
+
+Only the *differential* part is recoverable. Refraction common to every star is
+an identical displacement of the whole field, which is exactly a translation and
+is absorbed silently by `t_x, t_y` every epoch. What the fit can measure is how
+much more the red stars are refracted than the blue ones; the mean refraction of
+the field is gone and cannot be retrieved.
+
+**Annual term.** A quartic in the phase of the calendar year,
+`p = (JD − year start)/(year length) − 0.5`, so `[1, p, p², p³, p⁴]` per axis —
+**10 parameters**, fitted **globally**, one curve shared by every star
+(`ParA` is 10×N_src but holds a single distinct column). It absorbs whatever
+repeats with the seasons and is common to the field: the annual cycle of
+observing geometry, temperature and typical airmass at which the field is
+reachable. It is *not* parallax, which is per-source and is switched off (see
+section 3).
+
+**Pixel-phase term.** CCD response varies within a pixel, so a star's measured
+centroid is pulled toward or away from the pixel centre depending on where the
+light lands. Modelled as a quintic in the sub-pixel phase,
+`[φ, φ², φ³, φ⁴, φ⁵]` per axis — **10 parameters**, again fitted globally
+(`ParPix` is 10×1). It is recoverable only because the pipeline stored the
+per-epoch registration shifts; without them the phase is unknown and the fit
+refuses to run with this term on.
+
+**SysRem.** Two components on the astrometric residuals, computed **once over
+the whole decade** and reused, rather than refitted per season. This was the
+change that cut the target's season-to-season scatter from 5.32 to 2.28 mas:
+fitting seasons independently let each float on its own systematics. Point-wise
+rejection is applied to the correction, so a single bad epoch-source cell is
+zeroed rather than the whole source being discarded.
+
+**Weighting and outliers.** Each source is weighted by its own residual scatter,
+recomputed each iteration, with moving-median outlier rejection over a 30-epoch
+window. The effective number of sources behind the weighted frame is 223
+(BLG41) and 225 (BLG01), not 594 and 621 — the fit has already down-weighted
+most of the faint end without any explicit cut.
 
 **Convergence.** 15 weighted iterations before SysRem, 6 after. The last three
-iterations move the bright-star median by 0.003 mas (BLG41) and 0.001 (BLG01).
+move the bright-star median by 0.003 mas (BLG41) and 0.001 (BLG01).
 
 ---
 
@@ -74,10 +138,29 @@ iterations move the bright-star median by 0.003 mas (BLG41) and 0.001 (BLG01).
    pipeline leaves every `MAG_*` column empty), per-epoch zero point anchored on
    OGLE I, then SysRem photometry; airmass and parallactic angle computed from
    JD and the field centre; colour from OGLE V−I; quality cuts.
-3. **Joint fit 2016–2025** → proper motions
-4. **Full-decade fit** with those motions held → one SysRem correction for the run.
-5. **Ten single-season fits** reusing that correction.
-6. **Final global fit, 2016–2026, motions solved.** 
+3. **Final global fit, 2016–2026**, on the full matched set, motions solved. Two
+   passes as described in section 2, with SysRem between them.
+
+**The solution is the product of step 3 alone.** Three further runs were made
+and are *not* inputs to it, which the earlier version of this list implied they
+were:
+
+- a **joint fit over 2016–2025**, holding out the event season, whose proper
+  motions were passed to the two runs below;
+- a **full-decade fit** with those motions held, producing a SysRem correction
+  saved to `v3_DecadeSysRem`;
+- **ten single-season fits** reusing that correction, saved to `v3_Seasons`.
+
+The final fit takes the matched set and neither `FixedPM` nor
+`SysRemCorrection`: it solves motions freely and computes its own SysRem. The
+season fits fed nothing at all and the step has been removed from the driver;
+the other two survive because their outputs are cited elsewhere and cache the
+OGLE-to-Gaia solution, not because the solution depends on them.
+
+Note that the seasonal structure enters nowhere in the fitting. Seasons are used
+to *select* epochs for the held-out run above, and for reporting — season means,
+per-season errors in the CSVs, the sidereal-month binning of the figures — but
+no per-season parameter reaches the reported solution.
 
 ---
 
