@@ -95,24 +95,113 @@ only the constant from the proper-motion comparison. The two methods differ by
 
 ---
 
-### 4. The chain
+### 4. The chain, and every effect fitted in it
 
-Two steps, on the 130 / 100 source subset:
+**The two steps.** Both act on the 130 / 100 source subset:
 
-1. **Full-decade SysRem correction.** 2 components on the astrometric residuals,
-   computed once over the whole run and reused.
-2. **Final solution**, reusing that correction, with the pixel-phase term on,
-   15 weighted iterations before SysRem and 6 after.
+1. **Full-decade SysRem correction** — 2 components on the astrometric
+   residuals, computed once over the whole run and saved.
+2. **Final solution**, reusing that correction.
 
-The joint proper-motion step and the per-season fits of the reference reduction
-are not used: with so few, such well-measured sources the motions are solved
-directly in the global fit.
+The joint proper-motion step of the reference reduction is not used: with so
+few, so well-measured sources the motions are solved directly in the global fit.
+Neither is any per-season fitting — seasons enter only in reporting.
 
 | | BLG41 | BLG01 |
 |---|---|---|
 | step 1 | 16.3 min | 14.8 min |
 | step 2 | 30.0 min | 28.0 min |
 | convergence over the calibration stars, last 3 iterations | 0.0041 mas | 0.0002 mas |
+
+**Each step runs two passes internally**, and which terms are active differs
+between them. This matters for reading the saved objects: `IFsys.AnnualEffect`
+and `IFsys.PixPhase` both read `0` in the v5 solutions, which does **not** mean
+those effects were ignored — they were fitted and subtracted in pass 1 and
+switched off for pass 2, which works on data from which they have already been
+removed.
+
+| | pass 1 | between | pass 2 (final) |
+|---|---|---|---|
+| per-epoch affine | fitted | | fitted |
+| per-source position and motion | fitted | | fitted |
+| DCR / chromatic refraction | fitted | | **fitted again** |
+| annual term | **fitted and subtracted from the data** | | forced off |
+| pixel-phase term | **fitted and subtracted from the data** | | forced off |
+| SysRem | | applied | |
+| iterative reweighting | 15 iterations | | 6 iterations |
+
+`runIterDetrend` sets `AnnualEffect = false` and `PixPhase = false` whenever it
+is called with `FinalStep`, which `runIterDetrendMSc` passes only on pass 2. The
+corrected object from pass 1 is what pass 2 receives, so nothing is lost.
+
+**Per epoch — the frame.** A full 2-D affine, **6 parameters per exposure**,
+held in `ParE` as `[a₁₁−1, a₁₂, t_x, a₂₁, a₂₂−1, t_y]`; the linear rows store the
+deviation from the identity, so all-zero means "already aligned". The six
+degrees of freedom are translation (2), rotation (1), uniform scale (1) and
+shear (2). In v5 this block is **6 × 17 332 = 103 992 free parameters on BLG41**
+and 105 732 on BLG01, against 520 and 400 for every source parameter combined —
+the frame outnumbers the astrometry two hundred to one. Each epoch's six
+parameters are solved from 130 sources, so 260 equations for 6 unknowns; the
+reference reduction has 1188, which is the origin of v5's noisier frame and of
+the target's 4 to 12% penalty.
+
+**Per source — the astrometry we want.** Position (x₀, y₀) at `JD0` =
+2019-06-01 and proper motion (μx, μy), **4 parameters per star** in `ParS`, in
+pixels and pixels per year at 400 mas/pix. In v5 every one of these is free:
+`ParSFixed` is empty, which is the single difference from v4.
+
+**Differential chromatic refraction.** The atmosphere refracts blue light more
+than red, displacing a star along the parallactic angle by an amount that grows
+with airmass and depends on its colour. Modelled per axis as
+`[1, sin(pa)·secz, cos(pa)·secz]` plus six higher-order terms in
+`(secz·sin pa)ⁿ` and `(secz·cos pa)ⁿ` for n = 2, 3, 4 — **9 per axis, 18 in
+total** — and fitted separately in **6 equal-population colour bins**. All 130
+and 100 sources carry a colour, so the bins hold about 22 and 17 stars each;
+thin, but all six survive. The V−I edges are −1.98, −0.34, −0.09, 0, 0.09, 0.21,
+2.31 (BLG41) and −1.91, −0.42, −0.09, 0, 0.10, 0.21, 2.30 (BLG01). Equal-population
+quantile binning is invariant under any monotonic transformation of the colour,
+so a colour-scale error cannot move which star lands in which bin.
+
+Only the *differential* part is recoverable. Refraction common to every star is
+an identical displacement of the whole field, which is exactly a translation and
+is absorbed silently by `t_x, t_y` at every epoch. What the fit measures is how
+much more the red stars are refracted than the blue ones; the mean refraction of
+the field is gone and cannot be retrieved.
+
+**Annual term.** A quartic in the phase of the calendar year,
+`p = (JD − year start)/(year length) − 0.5`, giving `[1, p, p², p³, p⁴]` per
+axis — **10 parameters, fitted globally**, one curve shared by every star
+(`ParA` is 10 × N_src but holds a single distinct column). It absorbs whatever
+repeats with the seasons and is common to the field: the annual cycle of
+observing geometry, temperature, and the airmass at which the field is
+reachable. It is **not** parallax, which is per-source and switched off.
+
+**Pixel-phase term.** CCD response varies within a pixel, so a measured centroid
+is pulled toward or away from the pixel centre according to where the light
+falls. Modelled as a quintic in the sub-pixel phase, `[φ, φ², φ³, φ⁴, φ⁵]` per
+axis — **10 parameters, again global** (`ParPix` is 10 × 1). It is recoverable
+only because the pipeline stored the per-epoch registration shifts; without them
+the phase is unknown and the fit refuses to run with this term on.
+
+**SysRem.** Two components on the astrometric residuals, computed **once over
+the whole decade** and reused, not refitted per season. On the reference
+reduction this change cut the target's season-to-season scatter from 5.32 to
+2.28 mas, because fitting seasons independently let each float on its own
+systematics. In v5 the correction is 18.4 / 22.5 mas rms and is fully dense —
+every epoch-source cell is finite — because these sources are bright and almost
+always detected. Point-wise rejection is applied so that a single bad cell is
+zeroed rather than the whole source discarded.
+
+**Weighting and outliers.** Each source is weighted by its own residual scatter,
+recomputed every iteration, with moving-median outlier rejection over a
+30-epoch window.
+
+**What is deliberately absent.** Parallax is off (`Plx = false`): at bulge
+distances it is ≲ 0.12 mas, far below the noise floor. No microlensing or
+astrometric-deviation model is fitted — the solution is model-free, so no
+theoretical curve is imposed on the target. And no absolute astrometry enters
+the fit itself; the frame is relative, and Gaia is applied only afterwards as
+described in section 3.
 
 ---
 
