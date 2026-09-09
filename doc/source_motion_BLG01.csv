@@ -1,4 +1,9 @@
 # KMT-2026-BLG-0521 / OGLE-2026-BLG-0058, field BLG01
+# I_OGLE = 18.13, at pixel (151.5, 150.1) in this field
+# RA, Dec (J2000) = 17:52:38.086 , -31:47:36.22  =  268.158691 , -31.793394 deg
+#   Sky position from inverting this field own Gaia-to-pixel map. The two fields
+#   agree on it to 2-9 mas. Pixel positions differ between fields: the cut-outs
+#   are offset by about 1.1 pix.
 # X_mas, Y_mas: source position in mas, proper motion NOT removed, relative to the mean
 # Two error options are given for each axis:
 #   errX_decade, errY_decade: the running median residual RMS of all field stars at the
