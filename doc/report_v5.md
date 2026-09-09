@@ -4,24 +4,19 @@
 
 Prepared 2026-09-09. Solution: `~/KMTdata/Results/v5/IFfinal_<field>.mat`
 (variable `IFsys`; the logical `Frame` in the same file marks the calibration
-stars). This document describes **only** v5. The reference decade reduction is
-in `KMT260058_astrometry_report.pdf`; the Gaia-pinned variant and the v4/v5
-comparison are in `KMT260058_v4_report.pdf`.
+stars). 
 
 ---
 
-### 1. What v5 is, in one paragraph
+### 1. A short description 
 
 The analysis is restricted to a clean calibration set — bright, isolated, and
 astrometrically well behaved in Gaia — plus the target and three comparison
 stars at the target's own magnitude. Every one of those stars is **freely
 fitted** and every one takes part in determining the per-epoch frame at every
-step. Gaia is used only to *select* the set, and then again at the very end, as
+step. Gaia data are used only to *select* the set, and then again at the very end, as
 a post-hoc tie that fixes the frame's gauge. Nothing is held at a catalogue
 value during the fit.
-
-This is the counterpart to v4, which uses the identical source set but pins
-each calibration star's position and proper motion to Gaia while fitting.
 
 ---
 
@@ -58,8 +53,8 @@ Notes on the individual cuts:
   is not biasing it heavily.
 - BLG01 loses 12 sources at the Gaia-match step where BLG41 loses none. This
   follows its poorer OGLE coverage, 478 of 621 against 540 of 594.
-- **The target is not in the calibration set** — at I = 18.13 it falls outside
-  the magnitude window — and is added explicitly.
+- **The target is not in the calibration set initially** — at I = 18.13 it falls outside
+  the magnitude window — **but rather added explicitly after the selection**.
 
 ---
 
