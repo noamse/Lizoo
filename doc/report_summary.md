@@ -149,7 +149,8 @@ were:
   motions were passed to the two runs below;
 - a **full-decade fit** with those motions held, producing a SysRem correction
   saved to `v3_DecadeSysRem`;
-- **ten single-season fits** reusing that correction, saved to `v3_Seasons`.
+- **ten single-season fits** reusing that correction; these fed nothing, and
+  both the step and its output have since been removed.
 
 The final fit takes the matched set and neither `FixedPM` nor
 `SysRemCorrection`: it solves motions freely and computes its own SysRem. The
