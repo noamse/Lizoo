@@ -230,28 +230,52 @@ Three consequences:
 
 ### 8. Overlap of the two fields
 
-Matching the two source lists directly, after fitting the offset between the
-cut-outs (−1.11 / +0.24 pix):
+The two cut-outs cover the same sky, so in principle the same stars should
+appear in both. Counting how many actually do is complicated by blending: a
+close pair may be split into two detections in one field and merged into one in
+the other, and matching the two source lists directly then counts the same star
+twice. Stars are therefore identified **through the OGLE catalogue**, which is
+at 0.26 arcsec/pix and resolves about six times more sources than KMT detects.
+Each KMT source is matched to an OGLE entry within 1.5 pix, and two sources
+sharing an entry are the same star.
 
-| match radius | BLG41 matched | BLG01 matched |
+| | BLG41 | BLG01 |
 |---|---|---|
-| 0.5 pix | 339 / 594 (57%) | 352 / 621 (57%) |
-| **1.0 pix** | **546 / 594 (92%)** | **575 / 621 (93%)** |
-| 1.5 pix | 576 / 594 (97%) | 609 / 621 (98%) |
+| sources | 594 | 621 |
+| matched to an OGLE entry | 551 (93%) | 497 (80%) |
+| **distinct** OGLE stars behind them | **454** | **394** |
 
-These are indeed two observations of nearly the same sky, and the cut-outs span
-the same pixel range. The unmatched 7% are faint and marginal: median MAG_PSF
-17.18 against 16.87 for matched stars, and a detection fraction of 0.54 against
-0.84. They are stars one reduction found and the other did not, or blends split
-differently. Restricted to MAG_PSF < 17 the agreement is 94%.
+The gap between the last two rows is the blending, measured directly: 551
+detections correspond to only 454 stars on BLG41, so about **97 detections are
+duplicates** — one star split into two — and 103 on BLG01.
 
-Only 57% agree within 0.5 pix, so two independent reductions place a common
-star half a pixel to a pixel apart; 1 pixel is the appropriate radius.
+| OGLE I | BLG41 | BLG01 | in both | distinct | found in both |
+|---|---|---|---|---|---|
+| < 15 | 28 | 22 | 22 | 28 | 78.6% |
+| 15 – 16 | 54 | 42 | 42 | 54 | 77.8% |
+| 16 – 17 | 172 | 149 | 146 | 175 | 83.4% |
+| 17 – 18 | 135 | 119 | 117 | 137 | 85.4% |
+| 18 – 19 | 55 | 44 | 41 | 58 | 70.7% |
+| **all brighter than 19** | **444** | **376** | **368** | **452** | **81.4%** |
 
-Matching *through* Gaia and OGLE instead gives a misleading 58%, because their
-identification coverage over our sources is only 90% / 72% (Gaia) and 91% / 77%
-(OGLE) — sources neither catalogue identifies cannot be paired at all and count
-as non-overlapping.
+So **about four stars in five are detected in both fields**, and the shortfall is
+not a faint-end effect: the fraction is flat at 78 to 85% from the brightest
+stars down to I = 18, falling only in the last magnitude. What limits it is that
+BLG01 simply detects fewer stars — 376 against 444 brighter than 19 — which
+traces back to its poorer OGLE match rate, 80% against 93%.
+
+**There is nothing fainter than I = 19 to compare.** Our matched source lists
+span 12.87 to 18.98 in both fields, while the OGLE catalogue itself reaches
+21.40 and holds 2660 entries fainter than 19. That is the KMT detection limit in
+this crowding, not a catalogue cut, so no faint population exists to match.
+
+An earlier version of this section matched the two source lists directly and
+reported 92 and 93% agreement. That was **one-way nearest-neighbour matching**,
+which lets two sources in one field both claim the same source in the other and
+counts both as matched — precisely the blend-splitting case. Requiring the match
+to be mutual collapses 546 one-way matches to 453 real pairs, and saturates
+there at any radius beyond 1.5 pix. The OGLE-identified figure above is the one
+to use.
 
 ---
 
