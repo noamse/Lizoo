@@ -1,6 +1,10 @@
 # KMT-2026-BLG-0521 / OGLE-2026-BLG-0058, field BLG01, v5 reduction
 # COMPARISON STAR "out_d04": comparison star outside the calibration set
-# I_OGLE = 18.14, at pixel (147.6, 148.0), 4.5 pix from the target
+# I_OGLE = 18.14, at pixel (147.6, 148.0) in this field, 4.5 pix from the target
+# RA, Dec (J2000) = 17:52:38.210 , -31:47:37.06  =  268.159209 , -31.793628 deg
+#   Sky position from inverting this field own Gaia-to-pixel map. The two fields
+#   agree on it to 2-9 mas. Pixel positions differ between fields: the cut-outs
+#   are offset by about 1.1 pix.
 # absolute proper motion (mu_alpha cos d, mu_d) = -0.713, -5.419 mas/yr, gauge removed
 # WARNING: this star is 4.5 pix from the target with ~7 pix seeing. It is blended
 #   with the target and its centroid tracks the microlensing brightening; its 2026

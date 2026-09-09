@@ -3,6 +3,11 @@
 # v5 keeps only the calibration set (14<I<17, 2 arcsec isolated, Gaia RUWE<1.4)
 # plus the target and three I~18 comparison stars. All are freely fitted and all
 # take part in the frame; Gaia is applied afterwards as a post-hoc tie.
+# I_OGLE = 18.13, at pixel (151.6, 150.2) in this field
+# RA, Dec (J2000) = 17:52:38.085 , -31:47:36.21  =  268.158688 , -31.793392 deg
+#   Sky position from inverting this field own Gaia-to-pixel map. The two fields
+#   agree on it to 2-9 mas. Pixel positions differ between fields: the cut-outs
+#   are offset by about 1.1 pix.
 # X_mas, Y_mas: source position in mas, proper motion NOT removed, relative to the mean
 # errX_decade, errY_decade: the TARGET OWN residual RMS over the whole 2016-2026 run.
 #   NOTE this differs from the reference CSV, where the same column held a field-star
