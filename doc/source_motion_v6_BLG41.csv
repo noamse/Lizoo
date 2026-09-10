@@ -4,8 +4,8 @@
 # v6 fits the calibration set 14<I<19, isolated to 2 arcsec, 287 stars in this field.
 # All are freely fitted; Gaia RUWE<1.4 is applied only in the post-hoc tie.
 # I_OGLE = 18.13, at pixel (150.4, 150.4), 0.0 pix from the target
-# RA, Dec (J2000) = 17:52:38.086 , -31:47:36.21  =  268.158691 , -31.793393 deg
-# absolute proper motion (mu_alpha cos d, mu_d) = -2.017, -7.163 mas/yr
+# RA, Dec (J2000) = 17:52:38.085 , -31:47:36.21  =  268.158689 , -31.793393 deg
+# absolute proper motion (mu_alpha cos d, mu_d) = -1.937, -7.140 mas/yr
 #   full six-parameter gauge removed (constant AND linear gradient)
 # X_mas, Y_mas: position in mas, proper motion NOT removed, relative to the mean
 # errX_decade, errY_decade: this star own residual RMS over the run. Constant.

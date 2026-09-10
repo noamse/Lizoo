@@ -38,17 +38,26 @@ the isolation test, so it enters the fit on its own merits rather than being
 added by hand.
 
 For the tie only, Gaia is required: **273 of 287** and **225 of 253** sources
-have a Gaia counterpart, and of those **220** and **177** pass RUWE < 1.4.
+have a Gaia counterpart, and of those **220** and **177** pass RUWE < 1.4. The
+tie is fitted on a narrower set still — those RUWE-clean stars that also fall in
+**15 < I < 17**, numbering **118** and **90** — and is then applied to every
+source. Section 3 gives the reason and what it is worth.
 
 ---
 
 ### 3. Gaia, applied only at the end
 
+**The tie set.** The tie is fitted on stars that pass **RUWE < 1.4 and
+15 < I < 17** — 118 on BLG41 and 90 on BLG01 — chosen to be both astrometrically
+well behaved in Gaia and well measured here. It is then applied to every source
+in the field.
+
 **The map.** Gaia standard coordinates are fitted directly onto cut-out pixels
-from the RUWE-clean stars — not carried through OGLE, which would inherit its
-~110 mas astrometric error. Median residual **35.1 mas (BLG41)** and 37.1
-(BLG01), with scales of 2.5198 and 2.5291 pix/arcsec against the 2.500 expected
-at 0.4″/pix.
+from those stars — not carried through OGLE, which would inherit its ~110 mas
+astrometric error. Median residual **23.4 mas (BLG41)** and **22.1 (BLG01)**,
+with scales of 2.5195 and 2.5290 pix/arcsec against the 2.500 expected at
+0.4″/pix. Restricting the tie set to 15 < I < 17 improves the map by 35 to 40%
+over using all RUWE-clean stars, since bright stars have better positions.
 
 **The gauge, and a correction to all earlier work.** A free fit determines
 astrometry only up to a gauge: applying a global affine to all positions and
@@ -67,8 +76,25 @@ not noise. The full six-parameter gauge is therefore removed here:
 | BLG41 | 4.34 / 3.57 mas/yr | **0.98 / 0.66** |
 | BLG01 | 3.48 / 3.20 mas/yr | **1.00 / 0.70** |
 
-A factor of three to four. The gauge removed is a constant of +0.015 / +5.170
-(BLG41) and +2.275 / +4.329 (BLG01) mas/yr, plus the gradient above.
+A factor of three to four.
+
+**What the magnitude cut is worth.** Evaluated on the same test set — all
+RUWE-clean stars, so neither tie is flattered by its own training sample — the
+narrower tie set changes the proper-motion agreement hardly at all:
+
+| scatter about Gaia, all RUWE-clean stars | tie on all RUWE-clean | **tie on 15 < I < 17** |
+|---|---|---|
+| BLG41 | 0.979 / 0.664 | 1.022 / 0.640 |
+| BLG01 | 1.003 / 0.697 | 1.055 / 0.669 |
+
+mas/yr — a few per cent, inconsistent in sign. The reason is that the tie was
+never the limiting term. The narrower set is better measured, 0.57 against 0.98
+mas/yr per star, and it does determine the gauge slightly more precisely,
+**0.053 against 0.066 mas/yr**; but halving the number of stars nearly cancels
+that, and either way the gauge contributes **under 1% of the total variance**.
+The remaining 99% is each star's own proper-motion error, which no choice of tie
+stars can reach. The cut is kept because it clearly improves the positional map
+and costs nothing, not because it improves the motions.
 
 ---
 
@@ -143,11 +169,11 @@ the residual RMS at its magnitude.
 
 | | μ_α cos δ | μ_δ |
 |---|---|---|
-| BLG41 | **−2.017 ± 0.335** | **−7.163 ± 0.360** |
-| BLG01 | **−1.781 ± 0.256** | **−7.136 ± 0.377** |
-| difference between fields | −0.236 ± 0.421 | −0.028 ± 0.521 |
+| BLG41 | **−1.937 ± 0.335** | **−7.140 ± 0.360** |
+| BLG01 | **−1.658 ± 0.256** | **−7.089 ± 0.377** |
+| difference between fields | −0.279 ± 0.421 | −0.052 ± 0.521 |
 
-mas/yr. The two fields agree **within their errors**, at 0.56 and 0.05 sigma.
+mas/yr. The two fields agree **within their errors**, at 0.66 and 0.10 sigma.
 
 The quoted error is the **internal** one: the slope uncertainty from the scatter
 of the ten season means about the fitted line. It is deliberately not computed
@@ -156,8 +182,8 @@ nightly noise is strongly correlated. Median internal uncertainty over all
 sources is 0.127 / 0.114 (BLG41) and 0.123 / 0.112 (BLG01) mas/yr.
 
 **That internal error is still optimistic by a factor of two to three.** The
-external check — the scatter of our proper motions about Gaia's, 0.98 / 0.66 and
-1.00 / 0.70 mas/yr per star — is larger than the internal estimate would predict
+external check — the scatter of our proper motions about Gaia's, 1.02 / 0.64 and
+1.06 / 0.67 mas/yr per star — is larger than the internal estimate would predict
 even after Gaia's own 0.15 mas/yr is allowed for. Use **~1.0 / 0.7 mas/yr** as
 the realistic per-star uncertainty; the internal figure captures the random part
 only and misses systematics that bias a star's slope while leaving its seasons
