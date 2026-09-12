@@ -251,17 +251,41 @@ is shared systematic rather than measurement noise. The target is entirely
 typical in this respect, at the 51st to 75th percentile among stars within
 0.4 mag of it.
 
-The cause has not been identified. Five candidates were tested and eliminated:
+The cause has not been identified. Six candidates were tested and eliminated:
 
 | candidate | test | result |
 |---|---|---|
 | DCR / colour | per-season slope against colour | correlation below 0.11 in size |
+| DCR colour resolution | full refit with 12 and with 20 colour bins instead of 6 | slopes and cross-field correlation unchanged, see below |
 | blending | against nearest-neighbour distance | correlation below 0.05 in size |
 | field distortion | spatial correlation; quadratic in position | ~0 at all separations; 1.6 to 2.0% of variance |
 | pixel phase | slope against within-season phase drift | r ≈ 0.00, 0% of variance |
 | SysRem cadence | refit per season instead of per decade | slopes nearly **double**, to 5.1/7.6 and 5.6/7.7 mas |
 
-The last is the most informative. SysRem represents residuals as a per-source
+The colour-bin refits are the direct test of the DCR model. The 18 DCR
+parameters are fitted independently in each colour bin, so with 12 or 20 bins
+(19 or 11 stars per bin instead of 37) any colour dependence too fine for six
+bins would have been absorbed. Nothing changed:
+
+| | 6 bins (v8) | 12 bins | 20 bins |
+|---|---|---|---|
+| slope rms, BLG41 | 2.90 / 2.80 | 2.98 / 2.77 | 2.92 / 2.80 |
+| slope rms, BLG01 | 2.93 / 2.90 | 2.97 / 2.89 | 2.92 / 2.83 |
+| cross-field correlation | +0.795 / +0.754 | +0.794 / +0.742 | +0.796 / +0.766 |
+| bright-star RMS, BLG41 | 4.80 / 4.83 | 4.74 / 4.83 | 4.74 / 4.83 |
+| bright-star RMS, BLG01 | 4.75 / 4.95 | 4.78 / 4.95 | 4.73 / 4.96 |
+| target RMS, BLG41 | 23.77 / 19.67 | 23.80 / 19.72 | 23.78 / 19.66 |
+| target RMS, BLG01 | 21.51 / 20.45 | 21.47 / 20.40 | 21.53 / 20.34 |
+| target PM, BLG41 | −1.966 / −7.019 | −1.879 / −7.020 | −1.909 / −7.116 |
+| target PM, BLG01 | −1.514 / −7.073 | −1.684 / −7.048 | −1.595 / −7.105 |
+
+All in mas or mas/yr, X / Y. The cross-field correlation, which is the
+quantity that measures the shared systematic, is unchanged to the third decimal,
+the bright-star RMS moves by at most 0.06 mas and the target's proper motion by
+at most 0.17 mas/yr, or 0.75 of its error. Six colour bins already capture all
+the colour dependence there is; the six-bin solution is kept.
+
+The per-season SysRem test is the most informative. SysRem represents residuals as a per-source
 coefficient times a per-epoch mode, which is exactly the structure the slopes
 appear to have; giving it its own two components in each season — ten times the
 freedom — should have absorbed them. Instead the slopes grew and every other
@@ -314,7 +338,7 @@ crowding, not a catalogue cut.
 | `report_v8_target_beforeafter.png` | the target before and after proper-motion detrending |
 | `report_v8_pm_vs_gaia.png` | our absolute proper motion against Gaia's, after the tie |
 | `report_v8_chi2.png` | χ² distribution of the monthly binned residuals, target marked |
-| `report_v8_radec_<field>_<tag>.png` | RA and Dec residuals against time and against each other, colour-coded by time |
+| `report_v8_radec_<field>_<tag>.png` | RA and Dec residuals against time and against each other, colour-coded by time; bins with fewer than 10 epochs and epochs at sec z > 1.3 are dropped |
 | `report_v8_motion_<field>_<tag>.png` | 2x2 motion figures, proper motion retained and removed |
 | `source_motion_v8_<field>[_<tag>].csv` | per-epoch positions for the target and each comparison star |
 
