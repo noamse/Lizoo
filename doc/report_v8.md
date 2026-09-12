@@ -229,7 +229,9 @@ true bin uncertainty by about √7 ≈ 2.6**, because the noise within a month i
 correlated rather than independent. The effect is multiplicative and nearly
 independent of magnitude, and the faintest stars come closest to unity, since
 for them genuine photon noise — which *is* independent between exposures —
-dominates.
+dominates. The error bars of the RA/Dec and motion figures are the standard
+error scaled by this factor, computed per star and per axis and quoted in the
+panel titles.
 
 ### 8. A residual systematic that survives every correction
 
