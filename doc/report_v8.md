@@ -339,7 +339,7 @@ crowding, not a catalogue cut.
 | `report_v8_pm_vs_gaia.png` | our absolute proper motion against Gaia's, after the tie |
 | `report_v8_chi2.png` | χ² distribution of the monthly binned residuals, target marked |
 | `report_v8_radec_<field>_<tag>.png` | RA and Dec residuals against time and against each other, colour-coded by time; bins with fewer than 10 epochs and epochs at sec z > 1.3 are dropped |
-| `report_v8_motion_<field>_<tag>.png` | 2x2 motion figures, proper motion retained and removed |
+| `report_v8_motion_<field>_<tag>.png` | 2x2 motion figures, proper motion retained and removed; same binning cuts as the RA/Dec figures |
 | `source_motion_v8_<field>[_<tag>].csv` | per-epoch positions for the target and each comparison star |
 
 CSV columns are `JD, X_mas, Y_mas, errX_decade, errY_decade, errX_season,
