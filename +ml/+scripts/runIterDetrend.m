@@ -23,6 +23,7 @@ arguments
     Args.FinalStep = false;
     Args.RefSrcFlag = [];   % logical over sources: those defining the per-epoch frame
     Args.ParSFixed = [];    % same size as ParS: finite entries are held, NaN are fitted
+    Args.NColourBins = 6;   % equal-population colour bins for DCR and the annual term
 end
 
 
@@ -50,6 +51,7 @@ else
     if ~isempty(Args.RefSrcFlag)
         IF.RefSrcFlag = Args.RefSrcFlag;
     end
+    IF.NColourBins = Args.NColourBins;
     if ~isempty(Args.ParSFixed)
         IF.ParSFixed = Args.ParSFixed;
     end

@@ -4,7 +4,10 @@ arguments
     IF;
     Args.CBinWidth=[];
     Args.ClearBadColor = true;
-    Args.nBins = 6;
+    Args.nBins = [];   % empty takes IF.NColourBins
+end
+if isempty(Args.nBins)
+    Args.nBins = IF.NColourBins;
 end
 
 % if ~isempty(Args.CBinWidth)

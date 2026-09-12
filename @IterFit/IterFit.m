@@ -18,6 +18,7 @@ classdef  IterFit< MMS
         Wes;
         PlxTerms; 
         Chromatic = false; Chrom2D= false;
+        NColourBins = 6;   % equal-population colour bins for the DCR and annual terms
         HALat = false; PixPhase=false;
         Plx = true; FakePlx=false;AnnualEffect =false;
         UseWeights = true;
