@@ -258,9 +258,19 @@ true bin uncertainty by about √7 ≈ 2.6**, because the noise within a month i
 correlated rather than independent. The effect is multiplicative and nearly
 independent of magnitude, and the faintest stars come closest to unity, since
 for them genuine photon noise — which *is* independent between exposures —
-dominates. The error bars of the RA/Dec and motion figures are the standard
-error scaled by this factor, computed per star and per axis and quoted in the
-panel titles.
+dominates.
+
+**What the error bars in the figures are.** Each plotted point is the mean
+position of the frames in one sidereal-month bin. Its *standard error* (s.e.)
+is σ/√N, with σ the scatter of the individual frames inside the bin and N their
+number — the uncertainty of the mean, not the spread of the frames. For the
+target a typical bin has σ ≈ 21–23 mas and N ≈ 75, hence an s.e. of about
+2.5 mas, which is what the bar would be if the frames were independent. They
+are not, so the bars drawn are the s.e. multiplied by an empirical factor,
+√(χ²/DoF) of that star's bin means about zero, computed per star and per axis
+and quoted in each panel title (2.5–3 for the target, 1.6–2 for the
+best-measured comparison stars): the standard error the frame count suggests,
+inflated to match the scatter the bins actually show.
 
 ### 8. A residual systematic that survives every correction
 
