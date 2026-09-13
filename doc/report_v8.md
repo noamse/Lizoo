@@ -69,6 +69,35 @@ mas/yr. The two independent fields agree within their errors, at 1.09 and 0.10
 sigma. The quoted error is internal, from the scatter of the ten season means
 about the fitted line; the external check against Gaia gives about
 **1.0 / 0.62 mas/yr** per star, and that is the figure to use in practice.
+That external scatter is magnitude dependent: 0.55 / 0.35 mas/yr for I < 17,
+1.8 / 1.0 at 17–18 and 2.5–4.5 / 1.5–2.2 at 18–19, where both KMT blending and
+Gaia's own errors grow. At the target's magnitude the disagreement with Gaia to
+expect is therefore 1.5–2 mas/yr in declination, not 0.6.
+
+**The blend.** The target has a companion of equal brightness (`m18_d04`,
+I = 18.14, Gaia G = 19.69) at 4.5 pixels = 1.8″, itself paired with a G = 20.3
+star 1.0″ further out for which Gaia solves no proper motion; under the 3.1″
+KMT PSF the three are two blobs, and the calibration set's isolation cut, which
+excludes companions brighter than I = 18 within 2″, lets the pair through by
+0.14 mag. Gaia gives the target **−2.48 ± 0.47 / −9.13 ± 0.31 mas/yr**, i.e. our
+declination motion is 2.1 mas/yr less negative than Gaia's in both fields, and
+the companion +1.74 / +0.27, 9.4 mas/yr away from the target in declination.
+Three tests show that this offset is **not** the companion pulling our centroid:
+the measured separation of the two blobs is 91% of Gaia's, with the shortfall
+in the direction of the G = 20.3 star rather than of the target, so the mutual
+pull is at most a few per cent and could bias the proper motion by at most
+~0.5 mas/yr; the position of the target moves with seeing by 5 mas per pixel
+of FWHM, the same as isolated stars, and the seeing has no trend over the
+decade; and the relative motion of the two blobs measured directly from the raw
+positions, without any frame solution, is +2–3 / +0.4–0.8 mas/yr against Gaia's
++4.2 / +9.4. The 2.1 mas/yr is inside the 1.5–2 mas/yr KMT-minus-Gaia scatter
+for stars of this magnitude (26–29% of the stars within 0.5 mag of the target
+are further from Gaia in declination than it is), and Gaia's own five-parameter solution for the
+target carries 1.0 mas of astrometric excess noise in a 2″ group of three
+sources. Which of the two declination values is right cannot be decided from
+these data; what the blend does do for certain is add to the per-epoch scatter
+of the target, and dilute any astrometric excursion of the source by the flux
+fraction of the companion inside the fitting aperture.
 
 **No astrometric anomaly is detected at the target.** Its χ² on monthly binned
 residuals is 1500 and 1313 for 180 degrees of freedom, against field medians of
