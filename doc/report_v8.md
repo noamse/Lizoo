@@ -282,13 +282,15 @@ is shared systematic rather than measurement noise. The target is entirely
 typical in this respect, at the 51st to 75th percentile among stars within
 0.4 mag of it.
 
-The cause has not been identified. Seven candidates were tested and eliminated:
+The cause has not been identified. Nine candidates were tested and eliminated:
 
 | candidate | test | result |
 |---|---|---|
 | DCR / colour | per-season slope against colour | correlation below 0.11 in size |
 | DCR colour resolution | full refit with 12 and with 20 colour bins instead of 6 | slopes and cross-field correlation unchanged, see below |
 | calibrator contamination | second clipping iteration on the season scale, refit without the 21 + 22 stars with 2σ-high season-offset χ² | per-star RMS unchanged to within 1%, see below |
+| season-edge epochs | refit without the first and last 14 nights of every season (5% of the epochs) | RMS on the common epochs unchanged to within 1%; cross-field correlation +0.770 / +0.734, see below |
+| high-airmass epochs | refit without sec z > 1.3 (30% of the epochs) | fit 3–4% better for I > 17 on the common epochs; slope excess and cross-field correlation barely lower, see below |
 | blending | against nearest-neighbour distance | correlation below 0.05 in size |
 | field distortion | spatial correlation; quadratic in position | ~0 at all separations; 1.6 to 2.0% of variance |
 | pixel phase | slope against within-season phase drift | r ≈ 0.00, 0% of variance |
@@ -344,6 +346,39 @@ mas/yr in X. The apparent 3% gain in the quoted bright-star RMS (4.64 / 4.72 and
 improvement of the solution. The per-epoch frame with some 240 stars is
 insensitive to these 8–9%, so calibrator contamination is not the origin of
 the slopes, and v8 is kept as the reference.
+
+The two epoch cuts ask whether the slopes are made at the season edges or at
+high airmass. They are nearly independent selections: the first and last 14
+nights of a season hold only 25–50 epochs each at a median sec z of 1.33–1.40,
+but frames at sec z > 1.3 are taken at the start and end of every night all
+season long, so only 12% of them fall in the edge trim. Both were refitted with
+the v8 stars and fit otherwise unchanged (the truncated 2026 season keeps its
+final, mid-season nights). Compared on exactly the surviving epochs, so that
+dropping the noisiest frames is not mistaken for a better solution:
+
+| on the common epochs | edge trim, BLG41 / BLG01 | sec z ≤ 1.3, BLG41 / BLG01 |
+|---|---|---|
+| epochs kept | 96% / 96% | 78% / 77% |
+| RMS change, I < 17 | +0.6 / +0.1%, −0.1 / −0.4% | −0.6 / −0.2%, 0.0 / +0.1% |
+| RMS change, 17–18 | 0.0 / −0.4%, +0.4 / +0.1% | −0.3 / −3.0%, −3.9 / −3.9% |
+| RMS change, 18–19 | +0.6 / −0.5%, +1.1 / +0.2% | −0.5 / −1.0%, −1.0 / −1.0% |
+| RMS change, target | −0.1 / −0.5%, +2.1 / +1.1% | −2.6 / 0.0%, −3.9 / +2.0% |
+| target PM | −1.926 / −6.988, −1.583 / −7.056 | −1.530 / −7.195, −1.583 / −7.187 |
+| Gaia scatter | 0.985 / 0.598, 1.039 / 0.648 | 0.995 / 0.596, 1.027 / 0.698 |
+| slope rms | 2.68 / 2.56, 2.69 / 2.67 | 2.73 / 2.79, 2.81 / 2.72 |
+| excess over white noise | 2.9 / 3.2 | 2.6 / 2.9 |
+| cross-field correlation | +0.770 / +0.734 | +0.770 / +0.730 |
+
+The edge trim is a null: on the common epochs nothing changes, and the 7%
+lower slope rms is only the shorter season. The airmass cut is a small, real
+improvement of the fit for stars fainter than I = 17 and for the target's X
+scatter — the differential-refraction and high-airmass PSF model evidently
+does worst on faint stars — and it moves the target's proper motion in BLG41
+by 0.44 mas/yr in X (1.3σ), bringing the two fields to within 0.05 mas/yr;
+that is one number moving within its error, at the cost of 30% of the data.
+Either way the slope excess and the cross-field correlation survive with
+three-quarters of the epochs at sec z < 1.3, so the shared systematic is made
+neither at the season edges nor at high airmass.
 
 The per-season SysRem test is the most informative. SysRem represents residuals as a per-source
 coefficient times a per-epoch mode, which is exactly the structure the slopes
