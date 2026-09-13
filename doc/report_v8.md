@@ -253,12 +253,13 @@ is shared systematic rather than measurement noise. The target is entirely
 typical in this respect, at the 51st to 75th percentile among stars within
 0.4 mag of it.
 
-The cause has not been identified. Six candidates were tested and eliminated:
+The cause has not been identified. Seven candidates were tested and eliminated:
 
 | candidate | test | result |
 |---|---|---|
 | DCR / colour | per-season slope against colour | correlation below 0.11 in size |
 | DCR colour resolution | full refit with 12 and with 20 colour bins instead of 6 | slopes and cross-field correlation unchanged, see below |
+| calibrator contamination | second clipping iteration on the season scale, refit without the 21 + 22 stars with 2σ-high season-offset χ² | per-star RMS unchanged to within 1%, see below |
 | blending | against nearest-neighbour distance | correlation below 0.05 in size |
 | field distortion | spatial correlation; quadratic in position | ~0 at all separations; 1.6 to 2.0% of variance |
 | pixel phase | slope against within-season phase drift | r ≈ 0.00, 0% of variance |
@@ -286,6 +287,34 @@ quantity that measures the shared systematic, is unchanged to the third decimal,
 the bright-star RMS moves by at most 0.06 mas and the target's proper motion by
 at most 0.17 mas/yr, or 0.75 of its error. Six colour bins already capture all
 the colour dependence there is; the six-bin solution is kept.
+
+The season-scale clipping asks whether the frame is being pulled by
+calibrators that themselves carry coherent season offsets — the decade RMS used
+for the v8 cut averages such offsets away (a 16.75-mag star among the comparison
+set has its X residual at +15 mas for two seasons and −15 mas for one, with a
+perfectly normal decade RMS). Applying a second 2σ cut, in log space per
+magnitude bin, on each star's season-offset χ²/DoF — Σ(season mean / s.e.)²
+over seasons and axes — removes 21 stars in BLG41 and 22 in BLG01, two-thirds of
+them at 16–17 mag; the target sits at z = +0.9 / +0.6, inside the population.
+Refitting on the 239 + 213 survivors changes nothing on the stars common to
+both solutions:
+
+| common stars | BLG41 | BLG01 |
+|---|---|---|
+| RMS, I < 17 (117 / 105 stars) | 4.66 / 4.77 → 4.65 / 4.80 | 4.61 / 4.95 → 4.60 / 4.94 |
+| RMS, 17–18 | +1.0% / +0.5% | −1.5% / +1.5% |
+| RMS, 18–19 | +0.1% / +2.4% | −0.9% / +1.1% |
+| Gaia scatter, RUWE-clean (181 / 146) | 0.967 / 0.558 → 0.934 / 0.572 | 1.067 / 0.629 → 0.982 / 0.661 |
+| target PM | −1.966 / −7.019 → −2.003 / −6.997 | −1.514 / −7.073 → −1.770 / −7.024 |
+
+Per-star RMS moves by under 1% with half the stars going each way; the Gaia
+scatter improves in X and worsens in Y; the target's proper motion moves by
+0.04 and 0.26 mas/yr (0.1σ and 1.1σ), bringing the two fields to within 0.23
+mas/yr in X. The apparent 3% gain in the quoted bright-star RMS (4.64 / 4.72 and
+4.58 / 4.94) is entirely the removal of the worst stars from the median, not an
+improvement of the solution. The per-epoch frame with some 240 stars is
+insensitive to these 8–9%, so calibrator contamination is not the origin of
+the slopes, and v8 is kept as the reference.
 
 The per-season SysRem test is the most informative. SysRem represents residuals as a per-source
 coefficient times a per-epoch mode, which is exactly the structure the slopes
