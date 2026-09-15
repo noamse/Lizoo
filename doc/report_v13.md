@@ -299,9 +299,10 @@ same season-by-season pattern: about 70% of the slope variance is shared
 systematic rather than measurement noise. The target is entirely typical in
 this respect, at the 50th to 75th percentile among stars within 0.4 mag of it.
 
-The cause has not been identified. Ten candidates were tested; the first nine
-were tested on the v8 solution, with two SysRem components, and are quoted with
-its numbers; the tenth is the SysRem series that led to v13.
+The cause has not been identified. Eleven candidates were tested; the first
+nine were tested on the v8 solution, with two SysRem components, and are quoted
+with its numbers; the tenth is the SysRem series that led to v13, the eleventh
+was tested on v13.
 
 | candidate | test | result |
 |---|---|---|
@@ -311,6 +312,7 @@ its numbers; the tenth is the SysRem series that led to v13.
 | season-edge epochs | refit without the first and last 14 nights of every season (5% of the epochs) | RMS on the common epochs unchanged to within 1%; cross-field correlation +0.770 / +0.734, see below |
 | high-airmass epochs | refit without sec z > 1.3 (30% of the epochs) | fit 3–4% better for I > 17 on the common epochs; slope excess and cross-field correlation barely lower, see below |
 | SysRem rank | 0, 2, 3, 4, 6, 8, 12 decade-wide components | half the slope signal is a rank-2 common mode; the rest erodes by ~4% per component and is not low-rank, see below |
+| annual term | v13 refitted with the annual term switched off in both steps and both passes | nothing changes: RMS within ±1%, slopes within ±2%, cross-field +0.704 / +0.670, see below |
 | blending | against nearest-neighbour distance | correlation below 0.05 in size |
 | field distortion | spatial correlation; quadratic in position | ~0 at all separations; 1.6 to 2.0% of variance |
 | pixel phase | slope against within-season phase drift | r ≈ 0.00, 0% of variance |
@@ -430,6 +432,19 @@ something the target's residual projected onto. Six components were therefore
 adopted: best external accuracy, target motion at its plateau, bright-star RMS
 8% / 6% and target X scatter 18% below v8. Declination is unaffected by the
 rank, −6.93 to −7.15 throughout.
+
+**The annual term** — a quartic in the phase of the calendar year, fitted in
+pass 1 and subtracted before pass 2 — was switched off entirely (v14). Nothing
+moves: bright-star RMS 4.38 / 4.69 and 4.48 / 4.83 mas against 4.40 / 4.68 and
+4.48 / 4.87, target RMS within 1%, target proper motion −2.211 / −6.932 and
+−1.855 / −7.098 against −2.271 / −6.931 and −1.960 / −7.023 (at most 0.4σ),
+slope rms 2.49 / 2.73 and 2.47 / 2.69 against 2.54 / 2.68 and 2.45 / 2.66,
+cross-field correlation +0.704 / +0.670 against +0.729 / +0.664. The only
+consistent direction is the external scatter against Gaia, slightly worse
+without the term (1.005 / 0.598 and 1.029 / 0.648 against 0.967 / 0.593 and
+1.034 / 0.606), so it is kept. Whatever the annual term describes is already
+absorbed by SysRem and the refraction model, and the season structure is not a
+mis-modelled annual effect.
 
 The per-season SysRem test is the most informative on the *nature* of the
 remainder. SysRem represents residuals as a per-source
