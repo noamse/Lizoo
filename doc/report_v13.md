@@ -182,8 +182,9 @@ switched off in pass 2, which works on data from which they have been removed.
   bin, 6 equal-population bins. Only the *differential* part is recoverable —
   refraction common to the field is exactly a translation and is absorbed by
   `t_x, t_y` every epoch.
-- **Annual term** — a quartic in the phase of the calendar year, 10 parameters,
-  fitted globally, one curve shared by every star. Not parallax, which is
+- **Annual term** — a quartic in the phase of the calendar year, 10 parameters
+  per colour bin, one curve shared by every star of the bin (the same six
+  equal-population colour bins as the DCR term). Not parallax, which is
   per-source and switched off.
 - **Pixel phase** — a quintic in the sub-pixel phase, 10 parameters, global,
   recoverable only because the pipeline stored the per-epoch registration shifts.
